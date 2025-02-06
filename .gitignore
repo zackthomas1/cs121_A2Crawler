@@ -103,9 +103,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# vscode
-.vscode/
-
 *.full.py
 *.shelve
 
