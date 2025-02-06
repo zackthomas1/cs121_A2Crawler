@@ -106,5 +106,8 @@ venv.bak/
 *.full.py
 *.shelve
 
+#vscode
+.vscode/
+
 # git
 .git/
