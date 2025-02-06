@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 from utils import get_logger, get_urlhash, normalize
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import time
 
 def scraper(url, resp):
 
@@ -45,18 +46,34 @@ def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
-    allowed_domains = ["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"]
+    allowed_domains = {"ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"}
     
     try:
         parsed_url = urlparse(url)
-        host = parsed_url.netloc
+        domain = parsed_url.netloc
+        current_time = time.time()
+
+        # Politeness check
+        # last_access= domain_list_access.get(domain)
+        # if current_time - last_access_ <  POLITENESS: 
+
+
+        # Rate Limiting check
+
+        # Remove timestaps older than 1 minute
+
+        # Enforce Rate limit
+
+        # Duplicate URL check
 
         # Check if url scheme is valid
         if parsed_url.scheme not in set(["http", "https"]):
             return False
         
-        if parsed_url.netloc not in set(allowed_domains): 
+        # check host is in URL is in allowed domains
+        if domain not in allowed_domains: 
             return False
+        
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
