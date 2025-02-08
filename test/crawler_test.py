@@ -244,16 +244,67 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.can_fetch(url_statsconsult1))
         # self.assertFalse(scraper.can_fetch(url_statsconsult2))
 
-    def test_scraper_duplicate_url(self): 
-        url = "http://ics.uci.edu/page1"
+    def test_scraper_duplicate_url(self):
+        html_content = '''
+        <html>
+            <body>
+                <a href="https://cs.uci.edu/page1">Page 1</a>      
+                <a href="https://cs.uci.edu/page1#aboutme">Page 1 - about me</a>
+                <a href="/page1#locations">Page 1 - location</a>
+                <a href="https://cs.uci.edu/page1/">Page 1</a>
+            </body>
+        </html>
+        '''
+        url = "https://cs.uci.edu"
 
-        # Should be true the first time and False the second time
-        self.assertTrue(scraper.is_valid(url))
-        self.assertFalse(scraper.is_valid(url))
+        resp = MockResponse(url, 200, html_content)
+        links = scraper.scraper(url, resp)
+        expected_links = ["https://cs.uci.edu/page1"]
+
+        self.assertEqual(links, expected_links)
+
+    def test_exact_duplicate_content(self):
+        html_content = '''
+        <html>
+            <body>
+                <a href="https://cs.uci.edu/page1">Page 1</a>      
+                <a href="https://cs.uci.edu/page1#aboutme">Page 1 - about me</a>
+                <a href="/page1#locations">Page 1 - location</a>
+                <a href="https://cs.uci.edu/page1/">Page 1</a>
+            </body>
+        </html>
+        '''
+        url_1 = "https://cs.uci.edu"
+        url_2 = "https://eecs.berkeley.edu"
+
+        resp_1 = MockResponse(url_1, 200, html_content)
+        resp_2 = MockResponse(url_2, 200, html_content)
+
+        links_1 = scraper.scraper(url_1, resp_1)
+        links_2 = scraper.scraper(url_2, resp_2)
+
+        expected_links_1 = ["https://cs.uci.edu/page1"]
+    
+        self.assertEqual(links_1, expected_links_1)
+        self.assertEqual(len(links_2), 0)
 
     def test_infinite_trap_pattern(self):
-        url = "http://ics.uci.edu/a/b/c/d/e/f"
+        url = "http://ics.uci.edu/a/b/c/d/e/f/g"
         self.assertFalse(scraper.is_valid(url))
+
+    def test_avoid_query_string(self):
+        url = "https://ics.uci.edu"
+        url_query = "https://ics.uci.edu/?s=news"
+
+        self.assertTrue(scraper.is_valid(url))
+        self.assertFalse(scraper.is_valid(url_query))
+
+    def test_calendar_links_filter (self):
+        url = "https://ics.uci.edu"
+        url_calendar = "http://calendar.ics.uci.edu/calendar.php"
+
+        self.assertTrue(scraper.is_valid(url))
+        self.assertFalse(scraper.is_valid(url_calendar))
 
     def test_rate_limiting(self):
         start_time = time.time()

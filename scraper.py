@@ -1,9 +1,10 @@
 import re
-from bs4 import BeautifulSoup
+import hashlib
+from utils.config import Config
 from logging import Logger
+from bs4 import BeautifulSoup
 from utils import get_logger, get_urlhash, normalize
 from utils.download import download
-from utils.config import Config
 from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
 from xml.etree import ElementTree as ET
@@ -15,9 +16,13 @@ scrap_logger = get_logger("SCRAPER")
 
 # Tracks visited urls to avoid duplicates
 visited_urls = set()
+visited_content_checksums = set()
 
 # Dictionary to store parsed robots.txt files for different domains
 robots_parsers = {}
+
+def compute_content_checksum(content: str) -> str:
+    return hashlib.md5(content.encode('utf-8')).hexdigest()
 
 def scraper(url, resp):
 
@@ -26,16 +31,24 @@ def scraper(url, resp):
         scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
         return []
 
+    # Check that the EXACT content of this page has not already been scrapped 
+    content_checksum = compute_content_checksum(resp.raw_response.content)
+    if content_checksum in visited_content_checksums:
+        scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
+        return []
+    else:
+        visited_content_checksums.add(content_checksum)
+
     links = extract_next_links(url, resp)
     
     # Filter out duplicate and invalid urls
     unique_links = []
     for link in links:
-        normalized_link = normalize(link)
+        link_norm = normalize(link)
 
-        if normalized_link and normalized_link not in visited_urls and is_valid(normalized_link):
-            visited_urls.add(normalized_link)    # Mark visited
-            unique_links.append(link)
+        if link_norm not in visited_urls and is_valid(link_norm):
+            visited_urls.add(link_norm)    # Mark visited
+            unique_links.append(link_norm)
         else: 
             scrap_logger.info(f"Filtered out duplicate or invalid URL: {link}")
 
@@ -93,6 +106,16 @@ def is_valid(url: str) -> bool:
         
         # Avoid query strings (potential duplicate content)
         if parsed_url.query:
+            return False
+
+        # Avoid infinite trap pattern
+        MAX_DEPTH = 6
+        path_segments = [segment for segment in parsed_url.path.split('/') if segment]
+        if len(path_segments) > MAX_DEPTH:
+            return False
+
+        # Filter out calendar pages which are potentially low-information pages.
+        if "calendar" in parsed_url.path.lower() or "calendar" in parsed_url.netloc.lower():
             return False
 
         # Check robot.txt rules to follow politeness 
