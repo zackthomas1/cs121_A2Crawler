@@ -1,10 +1,14 @@
+import time
+
+import unittest
+from unittest.mock import patch, MagicMock
+
 import scraper
 from crawler.frontier import Frontier
 from crawler.worker import Worker
+
 from utils import get_logger
-import unittest
-import time
-from unittest.mock import patch
+from utils.download import download
 
 class MockConfig: 
     def __init__(self, seeds):
@@ -33,18 +37,34 @@ class TestCrawler(unittest.TestCase):
 
 class TestWorker(unittest.TestCase):
     def setUp(self): 
-        self.config = MockConfig(["https://www.ics.uci.edu", 
-                          "https://www.cs.uci.edu",
-                          "https://www.informatics.uci.edu",
-                          "https://www.stat.uci.edu"])
+        self.config = MockConfig([])
         self.frontier = Frontier(self.config, restart=True)
         self.logger = get_logger("TEST WORKER")
 
     def test_worker_respects_politness_delay(self):
         pass
 
-    def test_worker_proces_url(self):
-        pass
+    @patch("utils.download.download")
+    def test_worker_proces_url(self, mock_download):
+        html_content = '''
+        <html>
+            <body>
+                <a href="http://ics.uci.edu/page1">Page 1</a>
+                <a href="/page2">Page 2</a>
+                <a href="https://cs.uci.edu/page3">Page 3</a>
+            </body>
+        </html>
+        '''
+        mock_resp = MockResponse("http://ics.uci.edu/test", 200, html_content)
+        mock_download.return_value = mock_resp
+
+        self.frontier.add_url("https://www.ics.uci.edu/test")
+        worker = Worker(worker_id=1, config=self.config, frontier=self.frontier)
+        
+        with patch("utils.download.download", return_value=mock_resp):
+            worker.run()
+        
+        self.assertIsNone(self.frontier.get_tbd_url(), "Worker should have processed and removed test url.")
 
 class TestFrontier(unittest.TestCase): 
     def setUp(self): 
@@ -53,7 +73,19 @@ class TestFrontier(unittest.TestCase):
         self.logger = get_logger("TEST FRONTIER")
 
     def test_frontier_add_and_get_url(self):
-        pass
+        test_url_1 = "https://www.ics.uci.edu/page1"
+        test_url_2 = "https://www.ics.uci.edu/page2/about"
+        
+        self.frontier.add_url(test_url_1)
+        self.frontier.add_url(test_url_2)
+        
+        retrieved_url = self.frontier.get_tbd_url()
+        self.assertEqual(retrieved_url, test_url_2, "Second test url should be retrieved first")
+
+        retrieved_url = self.frontier.get_tbd_url()
+        self.assertEqual(retrieved_url, test_url_1, "First test url should be retrieved second")
+
+        self.assertIsNone(self.frontier.get_tbd_url(), "Frontier should be empty after retrieving 2 test urls.")
 
     def test_frontier_duplicate_url(self): 
         test_url = "https://www.ics.uci.edu"
@@ -96,8 +128,28 @@ class TestScraper(unittest.TestCase):
 
         self.assertEqual(links, expected_links)
 
+    def test_defragment(self): 
+        html_content = '''
+        <html>
+            <body>
+                <a href="http://ics.uci.edu/page1#aboutme">Page 1</a>
+                <a href="/page2#locations">Page 2</a>
+                <a href="https://cs.uci.edu/page3#zot">Page 3</a>
+            </body>
+        </html>
+        '''
+        resp = MockResponse("http://ics.uci.edu", 200, html_content)
+        links = scraper.extract_next_links("http://ics.uci.edu", resp)
+        expected_links = [
+        'http://ics.uci.edu/page1',
+        'http://ics.uci.edu/page2',  # Converted from relative
+        'https://cs.uci.edu/page3'
+        ]
+
+        self.assertEqual(links, expected_links)
+
     def test_bad_response_status(self):
-        html_content = ''' '''
+        html_content = ''''''
 
         resp = MockResponse("http://ics.uci.edu", 403, html_content)
         links = scraper.extract_next_links("http://ics.uci.edu", resp)
@@ -155,7 +207,35 @@ class TestScraper(unittest.TestCase):
     def test_invalid_scheme(self):
         self.assertFalse(scraper.is_valid("ftp://ics.uci.edu/page1"))
 
-    def test_duplicate_url(self): 
+    def test_can_fetch_robots(self): 
+        """
+        ics.uci.edu robots.txt
+        -----------------------
+        User-agent: ClaudeBot
+        Disallow: /
+
+        User-agent: *
+        Disallow: /people
+        Disallow: /happening
+        """
+        url_people1 = "https://www.ics.uci.edu/~lopes/" 
+        url_people2 = "https://ics.uci.edu/people/jenna-lynn-abrams/"
+        url_happening1 = "https://ics.uci.edu/happening/"
+        url_allowed = "https://ics.uci.edu/academics/undergraduate-programs/#major"
+    
+        url_statsconsult1 = "https://statconsulting.uci.edu/"
+        url_statsconsult2 = "https://statconsulting.uci.edu/wp-admin/"
+
+        self.assertTrue(scraper.can_fetch(url_people1))
+        self.assertFalse(scraper.can_fetch(url_people2))
+        self.assertFalse(scraper.can_fetch(url_happening1))
+        self.assertTrue(scraper.can_fetch(url_allowed))
+        self.assertFalse(scraper.can_fetch(url_allowed, user_agent= "ClaudeBot"))
+
+        self.assertTrue(scraper.can_fetch(url_statsconsult1))
+        self.assertFalse(scraper.can_fetch(url_statsconsult2))
+
+    def test_scraper_duplicate_url(self): 
         url = "http://ics.uci.edu/page1"
 
         # Should be true the first time and False the second time

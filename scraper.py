@@ -1,18 +1,38 @@
 import re
-from urllib.parse import urlparse
 from utils import get_logger, get_urlhash, normalize
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import time
+from urllib.parse import urljoin, urlparse
+from urllib.robotparser import RobotFileParser
+
+scrap_logger = get_logger("SCRAPER")
+
+# Tracks visited urls to avoid duplicates
+visited_urls = set()
+
+# Dictionary to store parsed robots.txt files for different domains
+robots_parsers = {}
 
 def scraper(url, resp):
 
     # Check that the response status is ok and that the raw response has content
     if resp.status != 200 or resp.raw_response is None:
+        scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
         return []
 
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    
+    # Filter out duplicate and invalid urls
+    unique_links = []
+    for link in links:
+        normalized_link = normalize_link(link)
+
+        if normalized_link and normalized_link not in visited_urls and is_valid(normalized_link):
+            visited_urls.add(normalized_link)    # Mark visited
+            unique_links.append(link)
+        else: 
+            scrap_logger.info(f"Filtered out duplicate or invalid URL: {link}")
+
+    return unique_links
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -23,22 +43,26 @@ def extract_next_links(url, resp):
     # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
-    # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    logger = get_logger("SCRAPER")
-    
+    # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content   
     links = []
 
     try:
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-        # logger.info(soup.prettify())  # Log the entire formatted html document
-        # logger.info(f"{soup.a}")  # Log the a tags in the html document
         for anchor in soup.find_all('a', href=True):
             link = anchor.get('href')
-            abs_link_url = urljoin(url, link)
-            # logger.info(f"{abs_link_url}")
-            links.append(abs_link_url)
+            
+            # convert relative url to absolute url
+            abs_url = urljoin(url, link)
+            
+            # Defragment: remove anything after '#'
+            parsed = urlparse(abs_url)
+            defrag_url = parsed._replace(fragment="").geturl()
+
+            #TODO: Consider stripping queries here
+
+            links.append(defrag_url)
     except Exception as e:
-        logger.fatal(f"Error parsing {url}: {e}")
+        scrap_logger.fatal(f"Error parsing {url}: {e}")
 
     return links
 
@@ -50,30 +74,24 @@ def is_valid(url):
     
     try:
         parsed_url = urlparse(url)
-        domain = parsed_url.netloc
-        current_time = time.time()
-
-        # Politeness check
-        # last_access= domain_list_access.get(domain)
-        # if current_time - last_access_ <  POLITENESS: 
-
-
-        # Rate Limiting check
-
-        # Remove timestaps older than 1 minute
-
-        # Enforce Rate limit
-
-        # Duplicate URL check
 
         # Check if url scheme is valid
         if parsed_url.scheme not in set(["http", "https"]):
             return False
         
         # check host is in URL is in allowed domains
-        if domain not in allowed_domains: 
+        if parsed_url.netloc and not any(domain in parsed_url.netloc for domain in allowed_domains): 
             return False
         
+        # Avoid query strings (potential duplicate content)
+        if parsed_url.query:
+            return False
+
+        # Check robot.txt rules to follow politeness 
+        # and do not fetch from paths we are not allowed
+        if not can_fetch(url):
+            return False
+       
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -86,4 +104,66 @@ def is_valid(url):
 
     except TypeError:
         print ("TypeError for ", parsed_url)
-        raise
+        return False
+
+def normalize_link(url): 
+    """
+    Ensures standardized URL format.
+    Removes fragments and unnesessary parameters.
+    """
+
+    try:
+        parsed_url = urlparse(url)
+        clean_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+        return clean_url
+    except Exception as e:
+        return None
+
+def can_fetch(url, user_agent="*"):
+    """
+    Checks if URL can be crawled based on robots.txt rules
+    """ 
+    parsed_url = urlparse(url)
+    parser = get_robots_parser(parsed_url)
+
+    # if get_robots_parser is unable to read a robots.txt file for 
+    # domain, then it will return None. In this case it is assumed that there
+    # are no restriction and the crawler can fetch any page in domain.
+    return parser.can_fetch(user_agent, url)
+
+def get_sitemap_urls(domain)
+
+def get_robots_parser(parsed_url):
+    """
+    """
+    scheme = parsed_url.scheme
+    domain = parsed_url.netloc
+    
+    # Check for cached parser
+    if domain in robots_parsers:
+        return robots_parsers[domain] # return cached parser
+
+    robots_url = f"{scheme}://{domain}/robots.txt"
+    parser = RobotFileParser()
+
+    try:
+        parser.set_url(robots_url)
+        parser.read()
+        scrap_logger.info(f"Loaded robots.txt for {robots_url}")
+    except Exception as e:
+        scrap_logger.warning(f"Failed to load robots.txt for {robots_url}")
+
+    robots_parsers[domain] = parser # Cache parser
+    return parser
+
+def get_sitemap_urls(domain):
+    """
+    Extract sitemap URL from robot.txt file 
+    """
+
+    parser = get_robots_parser(domain)
+    sitemap_urls = parser.site_maps()
+    if sitemap_urls: 
+        return sitemap_urls
+    else:
+        return []
