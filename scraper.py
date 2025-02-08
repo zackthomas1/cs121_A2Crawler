@@ -1,10 +1,17 @@
 import re
-from utils import get_logger, get_urlhash, normalize
 from bs4 import BeautifulSoup
+from logging import Logger
+from utils import get_logger, get_urlhash, normalize
+from utils.download import download
+from utils.config import Config
 from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
+from xml.etree import ElementTree as ET
 
 scrap_logger = get_logger("SCRAPER")
+
+# # Set to track domains that have been processed for sitemaps
+# processed_domains = set()
 
 # Tracks visited urls to avoid duplicates
 visited_urls = set()
@@ -24,7 +31,7 @@ def scraper(url, resp):
     # Filter out duplicate and invalid urls
     unique_links = []
     for link in links:
-        normalized_link = normalize_link(link)
+        normalized_link = normalize(link)
 
         if normalized_link and normalized_link not in visited_urls and is_valid(normalized_link):
             visited_urls.add(normalized_link)    # Mark visited
@@ -66,10 +73,11 @@ def extract_next_links(url, resp):
 
     return links
 
-def is_valid(url):
+def is_valid(url: str) -> bool:
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
+    
     allowed_domains = {"ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"}
     
     try:
@@ -106,20 +114,7 @@ def is_valid(url):
         print ("TypeError for ", parsed_url)
         return False
 
-def normalize_link(url): 
-    """
-    Ensures standardized URL format.
-    Removes fragments and unnesessary parameters.
-    """
-
-    try:
-        parsed_url = urlparse(url)
-        clean_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
-        return clean_url
-    except Exception as e:
-        return None
-
-def can_fetch(url, user_agent="*"):
+def can_fetch(url: str, user_agent: str = "*") -> bool:
     """
     Checks if URL can be crawled based on robots.txt rules
     """ 
@@ -129,11 +124,12 @@ def can_fetch(url, user_agent="*"):
     # if get_robots_parser is unable to read a robots.txt file for 
     # domain, then it will return None. In this case it is assumed that there
     # are no restriction and the crawler can fetch any page in domain.
-    return parser.can_fetch(user_agent, url)
+    if parser:
+        return parser.can_fetch(user_agent, url)  
+    else: 
+        return True
 
-def get_sitemap_urls(domain)
-
-def get_robots_parser(parsed_url):
+def get_robots_parser(parsed_url: str) -> RobotFileParser:
     """
     """
     scheme = parsed_url.scheme
@@ -152,18 +148,60 @@ def get_robots_parser(parsed_url):
         scrap_logger.info(f"Loaded robots.txt for {robots_url}")
     except Exception as e:
         scrap_logger.warning(f"Failed to load robots.txt for {robots_url}")
+        parser = None
 
     robots_parsers[domain] = parser # Cache parser
     return parser
 
-def get_sitemap_urls(domain):
+def get_sitemap_urls(domain: str) -> list[str]: 
     """
-    Extract sitemap URL from robot.txt file 
+    Extracts sitemap url from robots.txt
     """
 
     parser = get_robots_parser(domain)
-    sitemap_urls = parser.site_maps()
-    if sitemap_urls: 
-        return sitemap_urls
+    sitemaps_urls = parser.site_maps()
+
+    # is the sitemaps list empty?
+    if sitemaps_urls: 
+        scrap_logger.info(f"Found sitemaps for {domain}: {sitemaps_urls}")
+        return sitemaps_urls
     else:
         return []
+    
+def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
+    urls = set()
+
+    # use downloader
+    scrap_logger.info(f"Downloading sitemap: {sitemap_url}")
+    resp = download(sitemap_url, config, logger)
+
+    # invalid response return empty list
+    if resp. status != 200 or not resp.raw_response:
+        return []
+    
+    try: 
+        tree = ET.fromstring(resp.raw_response.content)
+
+        # Iterate over <loc> tags in xml
+        for url_element in tree.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc"):
+            url = url_element.text.strip()
+            if url:
+                urls.add(url)
+        logger.info(f"Extracted {len(urls)} urls from {sitemap_url}")
+    except Exception as e:
+        logger.error(f"Error parsing sitemap {sitemap_url}: {e}")
+
+    return list(urls)
+
+def intialize_scrap_from_sitemap(url: str, config: Config, logger: Logger) -> list[str]:
+    parsed_url = urlparse(url)
+    sitemap_urls = get_sitemap_urls(parsed_url.netloc)
+
+    links = []
+
+    if sitemap_urls:
+        for sitemap in sitemap_urls:
+            sitemap_links = fetch_sitemap_urls(sitemap, config, logger)
+            links.extend(sitemap_links)
+
+    return links
