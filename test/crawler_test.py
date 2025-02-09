@@ -1,5 +1,3 @@
-import time
-
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -8,13 +6,11 @@ from crawler.frontier import Frontier
 from crawler.worker import Worker
 
 from utils import get_logger
-from utils.download import download
 
 class MockConfig: 
     def __init__(self, seeds):
         self.user_agent = "IR UW25 47642149"
-        self.host = "styx.ics.uci.edu"
-        self.port = 9000
+        self.cache_server = ("localhost", 8000)
         self.save_file = "test_crawler"
         self.seed_urls = seeds
         self.time_delay = 0.5
@@ -45,122 +41,118 @@ class TestWorker(unittest.TestCase):
         self.frontier = Frontier(self.config, restart=True)
         self.logger = get_logger("TEST WORKER")
 
-    @patch("utils.download.requests.get")  # Mock requests.get() inside download()
-    @patch("utils.download.cbor.loads")  # Mock CBOR decoding
-    @patch("pickle.loads")
-    def test_worker_run(self, mock_pickle_loads, mock_cbor_loads, mock_requests_get):
+    @patch("utils.download.download")
+    def test_worker_run(self, mock_download):
         """Tests that Worker.run() correctly processes URLs and marks them complete."""
         
+        url = "https://www.ics.uci.edu/page1"
         html_content = """
         <html>
             <body>
                 <a href='https://www.ics.uci.edu/page2'>Next</a>
             </body>
         </html>"""
-
-        # Mock Response Object (to simulate cache server response)
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.content = b"mocked CBOR response"
-
-        # Mock requests.get() to return our fake response
-        mock_requests_get.return_value = mock_resp
-
-        # Mock CBOR Decoded Response
-        mock_cbor_loads.return_value = {
-            "url": "https://www.ics.uci.edu/page1",
-            "status": 200,
-            "response": {
-                "content": html_content.encode()
-            }
-        }
-
-        # Mock pickle.loads
-        mock_pickle_loads.return_value = MockRawResponse(html_content)
+        resp = MockResponse(url, 200, html_content)
 
         # Mock the Frontier methods
         mock_frontier = MagicMock(spec=Frontier)
-        mock_frontier.get_tbd_url.side_effect = ["https://www.ics.uci.edu/page1", None]  # One URL, then stop
+        mock_frontier.get_tbd_url.side_effect = [url, None]
         mock_frontier.add_url = MagicMock()
         mock_frontier.mark_url_complete = MagicMock()
 
-        # Mock config object
-        mock_config = MagicMock()
-        mock_config.cache_server = ("localhost", 8000)  # Mock cache server address
-        mock_config.user_agent = "TestAgent"
-        mock_config.time_delay = 0  # Avoid sleep delay
+        mock_download.return_value = resp
 
         # Create the Worker instance
-        worker = Worker(worker_id=1, config=mock_config, frontier=mock_frontier)
+        worker = Worker(worker_id=1, config=self.config, frontier=mock_frontier)
 
         # Run the worker in the main thread (not as a daemon)
         worker.run()
 
         # Assertions
-        mock_requests_get.assert_called_once_with(
-            "http://localhost:8000/",
-            params=[("q", "https://www.ics.uci.edu/page1"), ("u", "TestAgent")]
-        )  # Verifies the correct request was made
-
-        mock_cbor_loads.assert_called_once_with(b"mocked CBOR response")  # Ensures CBOR decoding happened
+        self.assertEqual(mock_download.call_count, 1)
         mock_frontier.add_url.assert_called_with("https://www.ics.uci.edu/page2")  # Link extraction check
         mock_frontier.mark_url_complete.assert_called_with("https://www.ics.uci.edu/page1")  # URL processed check
 
-    @patch("utils.download.requests.get")  # Mock requests.get() inside download()
-    @patch("utils.download.cbor.loads")  # Mock CBOR decoding
-    @patch("pickle.loads")
+    @patch("utils.download.download")
     @patch("time.sleep", side_effect=lambda x: None)
-    def test_worker_run_politeness(self, mock_sleep, mock_pickle_loads, mock_cbor_loads, mock_requests_get):
+    def test_worker_run_politeness(self, mock_sleep, mock_download):
         """Tests that Worker.run() correctly processes URLs and marks them complete."""
-        
-        html_content = """
+        url_1 = "https://www.ics.uci.edu/page1"
+        url_2 = "https://www.ics.uci.edu/page2"
+
+        html_content_1 = """
         <html>
             <body>
                 <a href='https://www.ics.uci.edu/page2'>Next</a>
             </body>
         </html>"""
+        html_content_2 = """
+        <html>
+            <body>
+                <p>Hello World</p>
+            </body>
+        </html>"""
 
-        # Mock Response Object (to simulate cache server response)
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.content = b"mocked CBOR response"
+        resp_1 = MockResponse(url_1, 200, html_content_1)
+        resp_2 = MockResponse(url_2, 200, html_content_2)
 
-        # Mock requests.get() to return our fake response
-        mock_requests_get.return_value = mock_resp
-
-        # Mock CBOR Decoded Response
-        mock_cbor_loads.return_value = {
-            "url": "https://www.ics.uci.edu/page1",
-            "status": 200,
-            "response": {
-                "content": html_content.encode()
-            }
-        }
-
-        # Mock pickle.loads
-        mock_pickle_loads.return_value = MockRawResponse(html_content)
+        mock_download.side_effect = [resp_1, resp_2]
 
         # Mock the Frontier methods
-        mock_frontier = MagicMock(spec=Frontier)
-        mock_frontier.get_tbd_url.side_effect = ["https://www.ics.uci.edu/page1", None]  # One URL, then stop
-        mock_frontier.add_url = MagicMock()
-        mock_frontier.mark_url_complete = MagicMock()
-
-        # Mock config object
-        mock_config = MagicMock()
-        mock_config.cache_server = ("localhost", 8000)  # Mock cache server address
-        mock_config.user_agent = "TestAgent"
-        mock_config.time_delay = 1 # Politeness delay
+        frontier = Frontier(self.config, restart=True)
+        frontier.add_url(url_1)
 
         # Create the Worker instance
-        worker = Worker(worker_id=1, config=mock_config, frontier=mock_frontier)
+        worker = Worker(worker_id=1, config=self.config, frontier=frontier)
 
         # Run the worker in the main thread (not as a daemon)
         worker.run()
 
         # Assertions
-        self.assertEqual(mock_sleep.call_count, 1)
-        mock_sleep.assert_called_with(mock_config.time_delay) 
+        mock_sleep.assert_called_with(self.config.time_delay) 
+
+    @patch("utils.download.download")
+    def test_circular_link_trap_detection(self, mock_download):
+        html_content_1 = '''
+        <html>
+            <body>
+                <a href="https://ics.uci.edu/page2">Page 2</a>
+            </body>
+        </html>
+        '''
+        html_content_2 = '''
+        <html>
+            <body>
+                <a href="http://ics.uci.edu/page1">Page 1</a>
+            </body>
+        </html>
+        '''
+
+        url_1 = "https://ics.uci.edu/page1"
+        url_2 = "https://ics.uci.edu/page2"
+
+        page1_resp = MockResponse(url_1, 200, html_content_1)
+        page2_resp = MockResponse(url_2, 200, html_content_2)
+
+        def mock_download_response(url, config, logger):
+            if url == url_1:
+                return page1_resp
+            elif url == url_2:
+                return page2_resp
+            return None
+
+        # Circular Trap: page1 links to page2, and page2 links back to page1
+        mock_download.side_effect = mock_download_response
+
+        self.frontier.add_url(url_1)
+
+        worker = Worker(worker_id=1, config=self.config, frontier=self.frontier)
+
+        worker.run()
+
+        mock_download.assert_any_call(url_1, self.config, worker.logger) 
+        mock_download.assert_any_call(url_2, self.config, worker.logger)
+        self.assertEqual(mock_download.call_count, 2)
 
 class TestFrontier(unittest.TestCase): 
     def setUp(self): 
@@ -192,16 +184,8 @@ class TestFrontier(unittest.TestCase):
         self.assertEqual(retrieved_url, test_url, "Duplicate url should not be added twice")
         self.assertIsNone(self.frontier.get_tbd_url(), "Frontier should be empty after retrieving the only url.")
  
-    def test_trap_detection(self): 
-        trap_url_1 = "https://www.ics.uci.edu/path/1234"
-        trap_url_2 = "https://www.ics.uci.edu/path/5678"
-
-        self.frontier.add_url(trap_url_1)
-        self.frontier.add_url(trap_url_2)   # Should be detected as a trap and ignored
-
-        retrieved_url = self.frontier.get_tbd_url()
-        self.assertEqual(retrieved_url, trap_url_1, "The First url should be added and retrieved from the frontier")
-        self.assertIsNone(self.frontier.get_tbd_url(), "Trap url should be ignored, the frontier should be empty.")
+    def test_site_map(self):
+        self.assertTrue(False)
 
 class TestScraper(unittest.TestCase):
     def test_extract_basic_links(self):
@@ -437,9 +421,8 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_calendar))
 
-    def test_rate_limiting(self):
-        start_time = time.time()
-        for _ in range(65): # Exceed the rate limit
-            scraper.is_valid("http://ics.uci.edu/page1'")
-        end_time = time.time()
-        self.assertGreaterEqual(end_time - start_time, 1, "Rate limiting should have caused delay")
+    def test_session_trap_detection(self): 
+        trap_url_1 = "https://www.ics.uci.edu/path/1234"
+        trap_url_2 = "https://www.ics.uci.edu/path/5678"
+
+        self.assertTrue(False)
