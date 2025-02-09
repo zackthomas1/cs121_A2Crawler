@@ -15,7 +15,6 @@ scrap_logger = get_logger("SCRAPER")
 # processed_domains = set()
 
 # Tracks visited urls to avoid duplicates
-visited_urls = set()
 visited_content_checksums = set()
 
 # Dictionary to store parsed robots.txt files for different domains
@@ -42,17 +41,16 @@ def scraper(url, resp):
     links = extract_next_links(url, resp)
     
     # Filter out duplicate and invalid urls
-    unique_links = []
+    unique_links = set()
     for link in links:
         link_norm = normalize(link)
 
-        if link_norm not in visited_urls and is_valid(link_norm):
-            visited_urls.add(link_norm)    # Mark visited
-            unique_links.append(link_norm)
+        if link_norm not in unique_links and is_valid(link_norm):
+            unique_links.add(link_norm)
         else: 
             scrap_logger.info(f"Filtered out duplicate or invalid URL: {link}")
 
-    return unique_links
+    return list(unique_links)
 
 def extract_next_links(url, resp):
     # Implementation required.
