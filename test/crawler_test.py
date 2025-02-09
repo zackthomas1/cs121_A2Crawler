@@ -25,11 +25,11 @@ class MockResponse:
     def __init__(self, url, status, content): 
         self.url = url 
         self.status = status
-        self.raw_response = self.RawResponse(content)
+        self.raw_response = self.MockRawResponse(content)
     
-    class RawResponse: 
-        def __init__(self, content):
-            self.content = content
+class MockRawResponse: 
+    def __init__(self, content):
+        self.content = content
 
 class TestCrawler(unittest.TestCase): 
     def setUp(self): 
@@ -44,27 +44,66 @@ class TestWorker(unittest.TestCase):
     def test_worker_respects_politness_delay(self):
         pass
 
-    @patch("utils.download.download")
-    def test_worker_proces_url(self, mock_download):
-        html_content = '''
+    @patch("utils.download.requests.get")  # Mock requests.get() inside download()
+    @patch("utils.download.cbor.loads")  # Mock CBOR decoding
+    @patch("pickle.loads")
+    def test_worker_run(self, mock_pickle_loads, mock_cbor_loads, mock_requests_get):
+        """Tests that Worker.run() correctly processes URLs and marks them complete."""
+        
+        html_content = """
         <html>
             <body>
-                <a href="http://ics.uci.edu/page1">Page 1</a>
-                <a href="/page2">Page 2</a>
-                <a href="https://cs.uci.edu/page3">Page 3</a>
+                <a href='https://www.ics.uci.edu/page2'>Next</a>
             </body>
-        </html>
-        '''
-        mock_resp = MockResponse("http://ics.uci.edu/test", 200, html_content)
-        mock_download.return_value = mock_resp
+        </html>"""
 
-        self.frontier.add_url("https://www.ics.uci.edu/test")
-        worker = Worker(worker_id=1, config=self.config, frontier=self.frontier)
-        
-        with patch("utils.download.download", return_value=mock_resp):
-            worker.run()
-        
-        self.assertIsNone(self.frontier.get_tbd_url(), "Worker should have processed and removed test url.")
+        # Mock Response Object (to simulate cache server response)
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.content = b"mocked CBOR response"
+
+        # Mock requests.get() to return our fake response
+        mock_requests_get.return_value = mock_resp
+
+        # Mock CBOR Decoded Response
+        mock_cbor_loads.return_value = {
+            "url": "https://www.ics.uci.edu/page1",
+            "status": 200,
+            "response": {
+                "content": html_content.encode()
+            }
+        }
+
+        # Mock pickle.loads
+        mock_pickle_loads.return_value = MockRawResponse(html_content)
+
+        # Mock the Frontier methods
+        mock_frontier = MagicMock(spec=Frontier)
+        mock_frontier.get_tbd_url.side_effect = ["https://www.ics.uci.edu/page1", None]  # One URL, then stop
+        mock_frontier.add_url = MagicMock()
+        mock_frontier.mark_url_complete = MagicMock()
+
+        # Mock config object
+        mock_config = MagicMock()
+        mock_config.cache_server = ("localhost", 8000)  # Mock cache server address
+        mock_config.user_agent = "TestAgent"
+        mock_config.time_delay = 0  # Avoid sleep delay
+
+        # Create the Worker instance
+        worker = Worker(worker_id=1, config=mock_config, frontier=mock_frontier)
+
+        # Run the worker in the main thread (not as a daemon)
+        worker.run()
+
+        # Assertions
+        mock_requests_get.assert_called_once_with(
+            "http://localhost:8000/",
+            params=[("q", "https://www.ics.uci.edu/page1"), ("u", "TestAgent")]
+        )  # Verifies the correct request was made
+
+        mock_cbor_loads.assert_called_once_with(b"mocked CBOR response")  # Ensures CBOR decoding happened
+        mock_frontier.add_url.assert_called_with("https://www.ics.uci.edu/page2")  # Link extraction check
+        mock_frontier.mark_url_complete.assert_called_with("https://www.ics.uci.edu/page1")  # URL processed check
 
 class TestFrontier(unittest.TestCase): 
     def setUp(self): 
@@ -279,6 +318,41 @@ class TestScraper(unittest.TestCase):
 
         resp_1 = MockResponse(url_1, 200, html_content)
         resp_2 = MockResponse(url_2, 200, html_content)
+
+        links_1 = scraper.scraper(url_1, resp_1)
+        links_2 = scraper.scraper(url_2, resp_2)
+
+        expected_links_1 = ["https://cs.uci.edu/page1"]
+    
+        self.assertEqual(links_1, expected_links_1)
+        self.assertEqual(len(links_2), 0)
+    
+    def test_near_duplicate_content(self):
+        html_content_1 = '''
+        <html>
+            <body>
+                <a href="https://cs.uci.edu/page1">Page 1</a>      
+                <a href="https://cs.uci.edu/page1#aboutme">Page 1 - about me</a>
+                <a href="/page1#locations">Page 1 - location</a>
+                <a href="https://cs.uci.edu/page1/">Page 1</a>
+            </body>
+        </html>
+        '''
+        html_content_2 = '''
+        <html>
+            <body>
+                <a href="https://cs.uci.edu/page1">Page 1</a>      
+                <a href="https://cs.uci.edu/page1#aboutme">Page 1 - about me</a>
+                <a href="/page1#locations">Page 1 - location</a>
+            </body>
+        </html>
+        '''
+
+        url_1 = "https://cs.uci.edu"
+        url_2 = "https://eecs.berkeley.edu"
+
+        resp_1 = MockResponse(url_1, 200, html_content_1)
+        resp_2 = MockResponse(url_2, 200, html_content_2)
 
         links_1 = scraper.scraper(url_1, resp_1)
         links_2 = scraper.scraper(url_2, resp_2)
