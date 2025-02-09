@@ -2,14 +2,12 @@ from bs4 import BeautifulSoup
 from tokenizer import Tokenize, ComputeTokenFrequencies
 import hashlib
 
-def compute_simhash(resp , hashbits = 16): 
+def compute_hash_value(content: str) -> str:
+    return hashlib.md5(content.encode('utf-8')).hexdigest()
+
+def compute_simhash(text , hashbits = 16): 
     """
     """
-
-    # Get the text from the html response
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    text = soup.get_text(separator= " ", strip=True)
-
     # create a list of tokens(words) in the html text
     # and compute the frequence of each token
     tokens = Tokenize(text)
@@ -23,7 +21,7 @@ def compute_simhash(resp , hashbits = 16):
 
         # compute a hash for each token
         # reduce its length to be 'hasbits' bits long
-        token_hash = int(hashlib.md5(token.encode("utf-8")).hexdigest(), 16)
+        token_hash = int(compute_hash_value(token), 16)
         token_hash = token_hash & ((1 << hashbits) - 1)
 
         # For each bit, add or subtract weight

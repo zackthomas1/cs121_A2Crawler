@@ -1,5 +1,6 @@
 import re
 import hashlib
+from simhash import compute_simhash, distance, compute_hash_value
 from utils.config import Config
 from logging import Logger
 from bs4 import BeautifulSoup
@@ -16,12 +17,10 @@ scrap_logger = get_logger("SCRAPER")
 
 # Tracks visited urls to avoid duplicates
 visited_content_checksums = set()
+visited_content_simhashes = set()
 
 # Dictionary to store parsed robots.txt files for different domains
 robots_parsers = {}
-
-def compute_content_checksum(content: str) -> str:
-    return hashlib.md5(content.encode('utf-8')).hexdigest()
 
 def scraper(url, resp):
 
@@ -30,13 +29,25 @@ def scraper(url, resp):
         scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
         return []
 
-    # Check that the EXACT content of this page has not already been scrapped 
-    content_checksum = compute_content_checksum(resp.raw_response.content)
-    if content_checksum in visited_content_checksums:
-        scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
-        return []
-    else:
-        visited_content_checksums.add(content_checksum)
+    # # Check that the EXACT content of this page has not already been scrapped 
+    # content_checksum = compute_hash_value(resp.raw_response.content)
+    # if content_checksum in visited_content_checksums:
+    #     scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
+    #     return []
+    # visited_content_checksums.add(content_checksum)
+
+    # Check for NEAT duplicate content 
+    THREASHOLD = 3
+    # Get the text from the html response
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    text = soup.get_text(separator= " ", strip=True)
+    current_page_hash = compute_simhash(text)
+    for visited_page_hash in visited_content_simhashes:
+        dist = distance(current_page_hash, visited_page_hash)
+        if dist < THREASHOLD:
+            scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match")
+            return []
+    visited_content_simhashes.add(current_page_hash)
 
     links = extract_next_links(url, resp)
     

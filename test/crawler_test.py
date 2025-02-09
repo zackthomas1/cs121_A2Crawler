@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import scraper
 from crawler.frontier import Frontier
 from crawler.worker import Worker
-import simhash
+from simhash import compute_simhash, distance, compute_hash_value
 
 from utils import get_logger
 
@@ -430,20 +430,74 @@ class TestScraper(unittest.TestCase):
 
 class TestSimHash(unittest.TestCase): 
 
-    def test_compute_simhash(self):
+    def test_near_duplicate_responses(self):
         html_content_1 = '''
         <html>
             <body>
                 <p> Hello World Hello </p>
                 <a href="https://ics.uci.edu/page2">Page 2</a>
                 <p> Hello Moon Bye </p>
-
             </body>
         </html>
         '''
-        url_1 = "https://ics.uci.edu/page1"
-        page1_resp = MockResponse(url_1, 200, html_content_1)
-        
-        simhash.compute_simhash(page1_resp)
+        html_content_2 = '''
+        <html>
+            <body>
+                <p> Hello Worrld Hello </p>
+                <a href="https://ics.uci.edu/page2">Page 2</a>
+                <p> Hello Mon Bye </p>
+            </body>
+        </html>
+        '''
 
+        url_1 = "https://ics.uci.edu/page1"
+        url_2 = "https://ics.uci.edu/notthesamepage"
+
+        page1_resp = MockResponse(url_1, 200, html_content_1)
+        page2_resp = MockResponse(url_2, 200, html_content_2)
+        
+        links_1 = scraper.scraper(url_1, page1_resp)
+        links_2 = scraper.scraper(url_2, page2_resp)
+
+        expected_links_1 = ["https://ics.uci.edu/page2"]
+
+        self.assertEqual(links_1, expected_links_1)
+        self.assertEqual(links_2, [])
+        self.assertEqual(len(links_2), 0)
+
+    def test_compute_hash_value(self):
+        input_val_1= 'a'
+        input_val_2= 'a'
+        input_val_3= 'A'
+        input_val_4= '52'
+
+        output_1 = compute_hash_value(input_val_1)
+        output_2 = compute_hash_value(input_val_2)
+        output_3 = compute_hash_value(input_val_3)
+        output_4 = compute_hash_value(input_val_4)
+
+        self.assertEqual(output_1, output_2)
+        self.assertNotEqual(output_1, output_3)
+        self.assertNotEqual(output_3, output_4)
+
+    def test_compute_simhash(self):
+       
         self.assertTrue(False)
+
+    def test_distance(self):
+        str_1 = "hello"
+        str_2 = "Hello"
+        str_3 = "World"
+
+        simhash_1 = compute_simhash(str_1)
+        simhash_2 = compute_simhash(str_2)
+        simhash_3 = compute_simhash(str_3)
+
+        dist_1 = distance(simhash_1, simhash_1)
+        dist_2 = distance(simhash_1, simhash_2)
+        dist_3 = distance(simhash_1, simhash_3)
+
+        THRESHOLD = 3
+        self.assertTrue(dist_1 == 0)
+        self.assertTrue(dist_2 < THRESHOLD)
+        self.assertTrue(dist_3 > THRESHOLD)
