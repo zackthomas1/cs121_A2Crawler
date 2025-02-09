@@ -25,8 +25,12 @@ class MockResponse:
     def __init__(self, url, status, content): 
         self.url = url 
         self.status = status
-        self.raw_response = self.MockRawResponse(content)
-    
+        self.raw_response = self.RawResponse(content)
+
+    class RawResponse: 
+        def __init__(self, content):
+            self.content = content
+
 class MockRawResponse: 
     def __init__(self, content):
         self.content = content
@@ -40,9 +44,6 @@ class TestWorker(unittest.TestCase):
         self.config = MockConfig([])
         self.frontier = Frontier(self.config, restart=True)
         self.logger = get_logger("TEST WORKER")
-
-    def test_worker_respects_politness_delay(self):
-        pass
 
     @patch("utils.download.requests.get")  # Mock requests.get() inside download()
     @patch("utils.download.cbor.loads")  # Mock CBOR decoding
@@ -104,6 +105,62 @@ class TestWorker(unittest.TestCase):
         mock_cbor_loads.assert_called_once_with(b"mocked CBOR response")  # Ensures CBOR decoding happened
         mock_frontier.add_url.assert_called_with("https://www.ics.uci.edu/page2")  # Link extraction check
         mock_frontier.mark_url_complete.assert_called_with("https://www.ics.uci.edu/page1")  # URL processed check
+
+    @patch("utils.download.requests.get")  # Mock requests.get() inside download()
+    @patch("utils.download.cbor.loads")  # Mock CBOR decoding
+    @patch("pickle.loads")
+    @patch("time.sleep", side_effect=lambda x: None)
+    def test_worker_run_politeness(self, mock_sleep, mock_pickle_loads, mock_cbor_loads, mock_requests_get):
+        """Tests that Worker.run() correctly processes URLs and marks them complete."""
+        
+        html_content = """
+        <html>
+            <body>
+                <a href='https://www.ics.uci.edu/page2'>Next</a>
+            </body>
+        </html>"""
+
+        # Mock Response Object (to simulate cache server response)
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.content = b"mocked CBOR response"
+
+        # Mock requests.get() to return our fake response
+        mock_requests_get.return_value = mock_resp
+
+        # Mock CBOR Decoded Response
+        mock_cbor_loads.return_value = {
+            "url": "https://www.ics.uci.edu/page1",
+            "status": 200,
+            "response": {
+                "content": html_content.encode()
+            }
+        }
+
+        # Mock pickle.loads
+        mock_pickle_loads.return_value = MockRawResponse(html_content)
+
+        # Mock the Frontier methods
+        mock_frontier = MagicMock(spec=Frontier)
+        mock_frontier.get_tbd_url.side_effect = ["https://www.ics.uci.edu/page1", None]  # One URL, then stop
+        mock_frontier.add_url = MagicMock()
+        mock_frontier.mark_url_complete = MagicMock()
+
+        # Mock config object
+        mock_config = MagicMock()
+        mock_config.cache_server = ("localhost", 8000)  # Mock cache server address
+        mock_config.user_agent = "TestAgent"
+        mock_config.time_delay = 1 # Politeness delay
+
+        # Create the Worker instance
+        worker = Worker(worker_id=1, config=mock_config, frontier=mock_frontier)
+
+        # Run the worker in the main thread (not as a daemon)
+        worker.run()
+
+        # Assertions
+        self.assertEqual(mock_sleep.call_count, 1)
+        mock_sleep.assert_called_with(mock_config.time_delay) 
 
 class TestFrontier(unittest.TestCase): 
     def setUp(self): 
@@ -373,7 +430,7 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_query))
 
-    def test_calendar_links_filter (self):
+    def test_avoid_calendar_links (self):
         url = "https://ics.uci.edu"
         url_calendar = "http://calendar.ics.uci.edu/calendar.php"
 
