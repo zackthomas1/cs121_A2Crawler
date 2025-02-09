@@ -6,8 +6,6 @@ from crawler.frontier import Frontier
 from crawler.worker import Worker
 from simhash import compute_simhash, distance, compute_hash_value
 
-from utils import get_logger
-
 class MockConfig: 
     def __init__(self, seeds):
         self.user_agent = "IR UW25 47642149"
@@ -40,7 +38,6 @@ class TestWorker(unittest.TestCase):
     def setUp(self): 
         self.config = MockConfig([])
         self.frontier = Frontier(self.config, restart=True)
-        self.logger = get_logger("TEST WORKER")
 
     @patch("utils.download.download")
     def test_worker_run(self, mock_download):
@@ -159,7 +156,6 @@ class TestFrontier(unittest.TestCase):
     def setUp(self): 
         self.config = MockConfig([])
         self.frontier = Frontier(self.config, restart=True)
-        self.logger = get_logger("TEST FRONTIER")
 
     def test_frontier_add_and_get_url(self):
         test_url_1 = "https://www.ics.uci.edu/page1"
