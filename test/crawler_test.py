@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 import scraper
 from crawler.frontier import Frontier
 from crawler.worker import Worker
+import simhash
 
 from utils import get_logger
 
@@ -424,5 +425,25 @@ class TestScraper(unittest.TestCase):
     def test_session_trap_detection(self): 
         trap_url_1 = "https://www.ics.uci.edu/path/1234"
         trap_url_2 = "https://www.ics.uci.edu/path/5678"
+
+        self.assertTrue(False)
+
+class TestSimHash(unittest.TestCase): 
+
+    def test_compute_simhash(self):
+        html_content_1 = '''
+        <html>
+            <body>
+                <p> Hello World Hello </p>
+                <a href="https://ics.uci.edu/page2">Page 2</a>
+                <p> Hello Moon Bye </p>
+
+            </body>
+        </html>
+        '''
+        url_1 = "https://ics.uci.edu/page1"
+        page1_resp = MockResponse(url_1, 200, html_content_1)
+        
+        simhash.compute_simhash(page1_resp)
 
         self.assertTrue(False)
