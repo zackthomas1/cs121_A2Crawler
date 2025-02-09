@@ -7,6 +7,8 @@ from queue import Queue, Empty
 
 from utils import get_logger, get_urlhash, normalize
 from scraper import is_valid
+import robots
+
 
 class Frontier(object):
     def __init__(self, config, restart):
@@ -29,8 +31,14 @@ class Frontier(object):
         
         if restart:
             # Start from seed urls
-            for url in self.config.seed_urls:
-                self.add_url(url)
+            for seed_url in self.config.seed_urls:
+                self.add_url(seed_url)
+                
+                # Add urls from site maps to fronter
+                sitemap_urls = robots.seed_frontier_from_sitemap(seed_url, self.config, self.logger)
+                for site_url in sitemap_urls:
+                    self.add_url(site_url)
+
         else:
             # Set the frontier state with contents of save file.
             self._parse_save_file()

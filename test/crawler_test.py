@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
+import robots
 import scraper
 from crawler.frontier import Frontier
 from crawler.worker import Worker
@@ -181,7 +182,7 @@ class TestFrontier(unittest.TestCase):
         self.assertEqual(retrieved_url, test_url, "Duplicate url should not be added twice")
         self.assertIsNone(self.frontier.get_tbd_url(), "Frontier should be empty after retrieving the only url.")
  
-    def test_site_map(self):
+    def test_seed_with_site_map(self):
         self.assertTrue(False)
 
 class TestScraper(unittest.TestCase):
@@ -284,7 +285,7 @@ class TestScraper(unittest.TestCase):
     def test_invalid_scheme(self):
         self.assertFalse(scraper.is_valid("ftp://ics.uci.edu/page1"))
 
-    def test_can_fetch_robots(self): 
+    def test_can_robots_fetch(self): 
         """
         https://ics.uci.edu/robots.txt
         -----------------------
@@ -312,14 +313,14 @@ class TestScraper(unittest.TestCase):
         url_statsconsult1 = "https://statconsulting.uci.edu/"
         url_statsconsult2 = "https://statconsulting.uci.edu/wp-admin/"
 
-        self.assertTrue(scraper.can_fetch(url_people1))
-        self.assertFalse(scraper.can_fetch(url_people2))
-        self.assertFalse(scraper.can_fetch(url_happening1))
-        self.assertTrue(scraper.can_fetch(url_allowed))
-        self.assertFalse(scraper.can_fetch(url_allowed, user_agent= "ClaudeBot"))
+        self.assertTrue(robots.can_fetch(url_people1))
+        self.assertFalse(robots.can_fetch(url_people2))
+        self.assertFalse(robots.can_fetch(url_happening1))
+        self.assertTrue(robots.can_fetch(url_allowed))
+        self.assertFalse(robots.can_fetch(url_allowed, user_agent= "ClaudeBot"))
 
-        self.assertTrue(scraper.can_fetch(url_statsconsult1))
-        # self.assertFalse(scraper.can_fetch(url_statsconsult2))
+        self.assertTrue(robots.can_fetch(url_statsconsult1))
+        # self.assertFalse(robots.can_fetch(url_statsconsult2))
 
     def test_scraper_duplicate_url(self):
         html_content = '''

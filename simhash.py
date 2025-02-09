@@ -5,7 +5,7 @@ import hashlib
 def compute_hash_value(content: str) -> str:
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
-def compute_simhash(text , hashbits = 16): 
+def compute_simhash(text , hashbits = 32): 
     """
     """
     # create a list of tokens(words) in the html text
