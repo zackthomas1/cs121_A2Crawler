@@ -425,6 +425,12 @@ class TestScraper(unittest.TestCase):
 
         self.assertTrue(False)
 
+    def test_extract_next_line_defragment(self):
+        self.assertTrue(False)
+
+    def test_extract_next_stripe_query(self):
+        self.assertTrue(False)
+
 class TestSimHash(unittest.TestCase): 
 
     def test_near_duplicate_responses(self):

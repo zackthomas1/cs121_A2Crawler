@@ -29,18 +29,21 @@ def scraper(url, resp):
     # visited_content_checksums.add(content_checksum)
 
     # Check for NEAT duplicate content 
-    THREASHOLD = 6
-    # Get the text from the html response
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    text = soup.get_text(separator= " ", strip=True)
-    current_page_hash = compute_simhash(text)
-    for visited_page_hash in visited_content_simhashes:
-        dist = distance(current_page_hash, visited_page_hash)
-        if dist < THREASHOLD:
-            scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match")
-            return []
-    visited_content_simhashes.add(current_page_hash)
-
+    try:
+        # Get the text from the html response
+        soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+        text = soup.get_text(separator= " ", strip=True)
+        
+        THREASHOLD = 6
+        current_page_hash = compute_simhash(text)
+        for visited_page_hash in visited_content_simhashes:
+            dist = distance(current_page_hash, visited_page_hash)
+            if dist < THREASHOLD:
+                scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match")
+                return []
+        visited_content_simhashes.add(current_page_hash)
+    except Exception as e:
+        scrap_logger.fatal(f"Error parsing {url}: {e}")
     links = extract_next_links(url, resp)
     
     # Filter out duplicate and invalid urls
@@ -75,11 +78,12 @@ def extract_next_links(url, resp):
             # convert relative url to absolute url
             abs_url = urljoin(url, link)
             
+            # Stripping queries
+            parsed._replace(query="").geturl()
+
             # Defragment: remove anything after '#'
             parsed = urlparse(abs_url)
             defrag_url = parsed._replace(fragment="").geturl()
-
-            #TODO: Consider stripping queries here
 
             links.append(defrag_url)
     except Exception as e:
