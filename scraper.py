@@ -21,14 +21,14 @@ def scraper(url, resp):
         scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
         return []
 
-    # # Check that the EXACT content of this page has not already been scrapped 
+    # # Check for EXACT content duplicate (checksum) 
     # content_checksum = compute_hash_value(resp.raw_response.content)
     # if content_checksum in visited_content_checksums:
     #     scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
     #     return []
     # visited_content_checksums.add(content_checksum)
 
-    # Check for NEAT duplicate content 
+    # Check for NEAR duplicate content using Simhash
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
@@ -49,7 +49,7 @@ def scraper(url, resp):
     # Filter out duplicate and invalid urls
     unique_links = set()
     for link in links:
-        if link not in unique_links and is_valid(link):
+        if link and link not in unique_links and is_valid(link):
             unique_links.add(link)
         else: 
             scrap_logger.info(f"Filtered out duplicate or invalid URL: {link}")
