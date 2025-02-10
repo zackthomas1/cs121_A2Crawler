@@ -426,10 +426,40 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(False)
 
     def test_extract_next_line_defragment(self):
-        self.assertTrue(False)
+        html_content_1 = '''
+        <html>
+            <body>
+                <a href="https://ics.uci.edu/happening/news/">News</a>
+                <a href="https://ics.uci.edu/happening/news#bottom">News</a>
+                <a href="https://ics.uci.edu/happening/news/?filter%5Baffiliation_posts%5D=1988#top">News</a>
+            </body>
+        </html>
+        '''
+        url_1 = "https://ics.uci.edu/page1"
+        page1_resp = MockResponse(url_1, 200, html_content_1)
+
+        links = scraper.extract_next_links(url_1, page1_resp)
+        expected_links = ['https://ics.uci.edu/happening/news', "https://ics.uci.edu/happening/news", "https://ics.uci.edu/happening/news"]
+
+        self.assertEqual(links, expected_links)
 
     def test_extract_next_stripe_query(self):
-        self.assertTrue(False)
+        html_content_1 = '''
+        <html>
+            <body>
+                <a href="https://ics.uci.edu/happening/news/">News</a>
+                <a href="https://ics.uci.edu/happening/news/?filter%5Baffiliation_posts%5D=1988">News</a>
+                <a href="https://ics.uci.edu/happening/news/?filter%5Baffiliation_posts%5D=1988#top">News</a>
+            </body>
+        </html>
+        '''
+        url_1 = "https://ics.uci.edu/page1"
+        page1_resp = MockResponse(url_1, 200, html_content_1)
+
+        links = scraper.extract_next_links(url_1, page1_resp)
+        expected_links = ['https://ics.uci.edu/happening/news', "https://ics.uci.edu/happening/news", "https://ics.uci.edu/happening/news"]
+
+        self.assertEqual(links, expected_links)
 
 class TestSimHash(unittest.TestCase): 
 

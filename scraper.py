@@ -49,10 +49,8 @@ def scraper(url, resp):
     # Filter out duplicate and invalid urls
     unique_links = set()
     for link in links:
-        link_norm = normalize(link)
-
-        if link_norm not in unique_links and is_valid(link_norm):
-            unique_links.add(link_norm)
+        if link not in unique_links and is_valid(link):
+            unique_links.add(link)
         else: 
             scrap_logger.info(f"Filtered out duplicate or invalid URL: {link}")
 
@@ -77,15 +75,13 @@ def extract_next_links(url, resp):
             
             # convert relative url to absolute url
             abs_url = urljoin(url, link)
-            
-            # Stripping queries
-            parsed._replace(query="").geturl()
-
-            # Defragment: remove anything after '#'
             parsed = urlparse(abs_url)
-            defrag_url = parsed._replace(fragment="").geturl()
 
-            links.append(defrag_url)
+            # Strip queries and defragment (remove anything after '#')
+            clean_url = parsed._replace(query="", fragment="").geturl()
+            clean_url = normalize(clean_url)    # remove possible trailing '/'
+
+            links.append(clean_url)
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
 
