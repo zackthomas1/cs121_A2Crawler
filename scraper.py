@@ -34,7 +34,7 @@ def scraper(url, resp):
     #     return []
     # visited_content_checksums.add(content_checksum)
 
-    # Check for NEAR duplicate content using Simhash
+    # Check for EXACT/NEAR duplicate content using Simhash
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
@@ -50,6 +50,7 @@ def scraper(url, resp):
         visited_content_simhashes.add(current_page_hash)
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
+    
     links = extract_next_links(url, resp)
     
     # Filter out duplicate and invalid urls
