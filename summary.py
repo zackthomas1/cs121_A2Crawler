@@ -138,7 +138,7 @@ if __name__ == "__main__":
     cparser = ConfigParser()
     cparser.read(args.config_file)
     config = Config(cparser)
-    config.cache_server = get_cache_server(config, restart)
+    config.cache_server = get_cache_server(config, False)
 
     logger = get_logger("Summary")
 

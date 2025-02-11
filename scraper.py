@@ -85,15 +85,13 @@ def extract_next_links(url, resp):
             parsed = urlparse(abs_url)
 
             # Strip queries and defragment (remove anything after '#')
-            clean_url = parsed._replace(query="", fragment="").geturl()
-            clean_url = normalize(clean_url)    # remove possible trailing '/'
+            clean_url = normalize(parsed._replace(query="", fragment="").geturl())
 
             links.append(clean_url)
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
 
-    # return links
-    return []
+    return links
 
 def is_valid(url: str) -> bool:
     # Decide whether to crawl this url or not. 

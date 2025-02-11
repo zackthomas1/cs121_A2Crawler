@@ -250,7 +250,6 @@ class TestScraper(unittest.TestCase):
         links = scraper.scraper("http://ics.uci.edu", resp)
         self.assertEqual(links, expected_links)
 
-
     def test_extract_no_links(self):
         html_content = '''
         <html>
@@ -360,7 +359,7 @@ class TestScraper(unittest.TestCase):
         </html>
         '''
         url_1 = "https://cs.uci.edu"
-        url_2 = "https://eecs.berkeley.edu"
+        url_2 = "https://ics.uci.edu"
 
         resp_1 = MockResponse(url_1, 200, html_content)
         resp_2 = MockResponse(url_2, 200, html_content)
