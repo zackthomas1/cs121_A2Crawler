@@ -279,7 +279,10 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid("http://cs.uci.edu/page1"))
         self.assertTrue(scraper.is_valid("http://informatics.uci.edu/page1"))
         self.assertTrue(scraper.is_valid("http://stat.uci.edu/page1"))
-        
+        self.assertTrue(scraper.is_valid("https://ics.uci.edu/2023/09/06/uc-national-center-for-free-speech-and-civic-engagement-ask-the-experts-artificial-intelligence-and-education"))
+        self.assertTrue(scraper.is_valid("https://ics.uci.edu/author/kaphan2/page/4"))
+        self.assertTrue(scraper.is_valid("https://www.ics.uci.edu/~thornton/inf45"))
+
     def test_disallowed_domain(self):
         self.assertFalse(scraper.is_valid("https://www.cs.ucla.edu/history/"))
         self.assertFalse(scraper.is_valid("https://www.cs.usc.edu/about/news/"))
@@ -432,7 +435,16 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_commit))
 
-    def test_session_trap_detection(self): 
+    def test_avoid_readme_md_trap_detection(self): 
+        url = "https://ics.uci.edu"
+        url_readme_1 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/f179207851371a407b7a7bea832d6ee07baddd26/readme.md"
+        url_readme_2 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/readme.md"
+
+        self.assertTrue(scraper.is_valid(url))
+        self.assertFalse(scraper.is_valid(url_readme_1))
+        self.assertFalse(scraper.is_valid(url_readme_2))
+
+    def test_id_trap_detection(self): 
         trap_url_1 = "https://www.ics.uci.edu/path/dffe26132d98b7a7dc702b0ec5a4a76000d48373"
         trap_url_2 = "https://www.ics.uci.edu/path/18f79a635a0a2f6aa84c9f116856a253d6c257ba"
 
@@ -552,9 +564,12 @@ class TestSimHash(unittest.TestCase):
 class TestSummaryStatistics(unittest.TestCase): 
     def test_unique_pages(self):
         self.assertTrue(False)
+
     def test_longest_page(self): 
         self.assertTrue(False)
+
     def test_common_words(self):
         self.assertTrue(False) 
+        
     def test_ics_subdomains(self):
         self.assertTrue(False)

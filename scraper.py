@@ -7,9 +7,6 @@ from urllib.parse import urljoin, urlparse
 
 scrap_logger = get_logger("SCRAPER")
 
-# # Set to track domains that have been processed for sitemaps
-# processed_domains = set()
-
 # Tracks visited urls to avoid duplicates
 # visited_content_checksums = set()
 visited_content_simhashes = set()
@@ -27,14 +24,14 @@ def scraper(url, resp):
             scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
             return []
 
-    # # Check for EXACT content duplicate (checksum) 
+    # # Check for EXACT content duplicate (Checksum) 
     # content_checksum = compute_hash_value(resp.raw_response.content)
     # if content_checksum in visited_content_checksums:
     #     scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
     #     return []
     # visited_content_checksums.add(content_checksum)
 
-    # Check for EXACT/NEAR duplicate content using Simhash
+    # Check for NEAR duplicate content (Simhash)
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
@@ -150,7 +147,8 @@ def is_valid(url: str) -> bool:
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed_url.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
+            + r"|md)$", parsed_url.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed_url)
