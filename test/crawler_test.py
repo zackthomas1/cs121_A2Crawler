@@ -25,6 +25,7 @@ class MockResponse:
 
     class RawResponse: 
         def __init__(self, content):
+            self.headers = {}
             self.content = content
 
 class MockRawResponse: 
@@ -239,8 +240,14 @@ class TestScraper(unittest.TestCase):
         links = scraper.extract_next_links("http://ics.uci.edu", resp)
         self.assertEqual(links, expected_links)
 
+    def test_redirect_response_status(self):
+        html_content = ''''''
+
+        expected_links = ["http://cs.uci.edu"]
         resp = MockResponse("http://ics.uci.edu", 301, html_content)
-        links = scraper.extract_next_links("http://ics.uci.edu", resp)
+        resp.raw_response.headers = {"Location": "http://cs.uci.edu"}
+
+        links = scraper.scraper("http://ics.uci.edu", resp)
         self.assertEqual(links, expected_links)
 
 
@@ -534,3 +541,13 @@ class TestSimHash(unittest.TestCase):
         self.assertTrue(dist_1 == 0)
         self.assertTrue(dist_2 < THRESHOLD)
         self.assertTrue(dist_3 > THRESHOLD)
+
+class TestSummaryStatistics(unittest.TestCase): 
+    def test_unique_pages(self):
+        self.assertTrue(False)
+    def test_longest_page(self): 
+        self.assertTrue(False)
+    def test_common_words(self):
+        self.assertTrue(False) 
+    def test_ics_subdomains(self):
+        self.assertTrue(False)

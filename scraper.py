@@ -11,15 +11,21 @@ scrap_logger = get_logger("SCRAPER")
 # processed_domains = set()
 
 # Tracks visited urls to avoid duplicates
-visited_content_checksums = set()
+# visited_content_checksums = set()
 visited_content_simhashes = set()
 
 def scraper(url, resp):
 
     # Check that the response status is ok and that the raw response has content
     if resp.status != 200 or resp.raw_response is None:
-        scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
-        return []
+        if resp.status >= 300 and resp.status < 400:  # HTTP 3xx Redirection
+            redirect_url = resp.raw_response.headers.get("Location")
+
+            scrap_logger.warning(f"Status {resp.status}: Redirecting {url} -> {redirect_url}")
+            return  [redirect_url] if is_valid(redirect_url) else []
+        else:
+            scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
+            return []
 
     # # Check for EXACT content duplicate (checksum) 
     # content_checksum = compute_hash_value(resp.raw_response.content)
@@ -85,7 +91,8 @@ def extract_next_links(url, resp):
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
 
-    return links
+    # return links
+    return []
 
 def is_valid(url: str) -> bool:
     # Decide whether to crawl this url or not. 
