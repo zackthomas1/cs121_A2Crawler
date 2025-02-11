@@ -120,9 +120,21 @@ def is_valid(url: str) -> bool:
         path_segments = [segment for segment in parsed_url.path.split('/') if segment]
         if len(path_segments) > MAX_DEPTH:
             return False
+        
+        # Check for unique identifier segment in path 
+        # If segment is alphanumeric and beyond a cut off length 
+        # it is highly likely to be an ID and should be ignored. 
+        MAX_SEGMENT_LENGTH = 20
+        for segment in path_segments: 
+            if segment.isalnum() and len(segment) > MAX_SEGMENT_LENGTH:
+                return False 
 
         # Filter out calendar pages which are potentially low-information pages.
         if "calendar" in parsed_url.path.lower() or "calendar" in parsed_url.netloc.lower():
+            return False
+        
+        # Filter out commit pages (gitlab/github) which are potentially low-information pages.
+        if "commit" in parsed_url.path.lower():
             return False
 
         # Check robot.txt rules to follow politeness 

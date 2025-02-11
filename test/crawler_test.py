@@ -425,11 +425,19 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_calendar))
 
-    def test_session_trap_detection(self): 
-        trap_url_1 = "https://www.ics.uci.edu/path/1234"
-        trap_url_2 = "https://www.ics.uci.edu/path/5678"
+    def test_avoid_commit_links (self):
+        url = "https://ics.uci.edu"
+        url_commit = "http://gitlab.ics.uci.edu/curtic3/checkers_student/-/commit/120d8ceab82bfd7a92f94767ae51095c5e11b641"
 
-        self.assertTrue(False)
+        self.assertTrue(scraper.is_valid(url))
+        self.assertFalse(scraper.is_valid(url_commit))
+
+    def test_session_trap_detection(self): 
+        trap_url_1 = "https://www.ics.uci.edu/path/dffe26132d98b7a7dc702b0ec5a4a76000d48373"
+        trap_url_2 = "https://www.ics.uci.edu/path/18f79a635a0a2f6aa84c9f116856a253d6c257ba"
+
+        self.assertFalse(scraper.is_valid(trap_url_1))
+        self.assertFalse(scraper.is_valid(trap_url_2))
 
     def test_extract_next_line_defragment(self):
         html_content_1 = '''
