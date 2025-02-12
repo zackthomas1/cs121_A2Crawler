@@ -114,13 +114,6 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
 
     return []
 
-def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]:
-    # Use requests to download url
-    logger.info(f"Downloading sitemap: {sitemap_url}")
-    response = 
-
-
-
 
 def seed_frontier_from_sitemap(url: str, config: Config, logger: Logger) -> list[str]:
     sitemap_urls = get_sitemap_urls(url)
