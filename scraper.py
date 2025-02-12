@@ -128,6 +128,11 @@ def is_valid(url: str) -> bool:
             if segment.isalnum() and len(segment) > MAX_SEGMENT_LENGTH:
                 return False 
 
+        # Filter out "archieve.ics.uci.edu" domain. 
+        # This is the machine learning archieve.
+        if "archive.ics.uci.edu" in parsed_url.netloc:
+            return False
+
         # Filter out calendar pages which are potentially low-information pages.
         if "calendar" in parsed_url.path.lower() or "calendar" in parsed_url.netloc.lower():
             return False
