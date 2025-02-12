@@ -36,6 +36,8 @@ def scraper(url, resp):
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text(separator= " ", strip=True)
+
+        #TODO: Save text content to disk
         
         THREASHOLD = 6
         current_page_hash = compute_simhash(text)
