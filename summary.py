@@ -131,19 +131,19 @@ def ics_subdomains(frontier_save_path):
     return dict(sorted(subdomains.items()))
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--config_file", type=str, default="config.ini")
-    args = parser.parse_args()
+    # parser = ArgumentParser()
+    # parser.add_argument("--config_file", type=str, default="config.ini")
+    # args = parser.parse_args()
     
-    cparser = ConfigParser()
-    cparser.read(args.config_file)
-    config = Config(cparser)
-    config.cache_server = get_cache_server(config, False)
+    # cparser = ConfigParser()
+    # cparser.read(args.config_file)
+    # config = Config(cparser)
+    # config.cache_server = get_cache_server(config, False)
 
-    logger = get_logger("Summary")
+    # logger = get_logger("Summary")
 
-    # print(f" There are {unique_pages('frontier.shelve')} unique pages")
+    print(f" There are {unique_pages('frontier.shelve')} unique pages")
     # print(f"The longest page is {longest_page('frontier.shelve', config, logger, 50)}")
-    print(f"The most common words are:\n {get_common_words('frontier.shelve', config, logger, 50)}")
-    # print(f"{ics_subdomains('frontier.shelve')}")
+    # print(f"The most common words are:\n {get_common_words('frontier.shelve', config, logger, 50)}")
+    print(f"{ics_subdomains('frontier.shelve')}")
 
