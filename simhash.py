@@ -14,7 +14,7 @@ def compute_simhash(text , hashbits = 32):
     token_freq_table = {}
     ComputeTokenFrequencies(tokens, token_freq_table)
 
-    #
+    # initialize all hashbits to 0
     vector = [0] * hashbits
 
     for token in tokens:

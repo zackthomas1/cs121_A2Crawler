@@ -35,7 +35,13 @@ def scraper(url, resp):
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-        text = soup.get_text(separator= " ", strip=True)
+
+        # Remove the text of CSS, JS, metadata, alter for JS, embeded websites
+        for markup in soup.find_all(["style", "script", "meta", "noscript", "iframe"]):  
+            markup.decompose()  # remove all markups stated above
+
+        # soup contains only human-readable texts now to be compared near-duplicate
+        text = soup.get_text(separator=" ", strip=True)
         
         THREASHOLD = 6
         current_page_hash = compute_simhash(text)
