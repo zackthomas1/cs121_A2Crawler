@@ -65,7 +65,7 @@ class Frontier(object):
         try:
             # Log remaining websites / progress
             self.logger.info(
-                f"{len(to_be_downloaded)} urls remaining.")
+                f"{len(self.to_be_downloaded)} urls remaining.")
             return self.to_be_downloaded.pop()
         except IndexError:
             return None
