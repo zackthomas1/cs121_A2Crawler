@@ -63,10 +63,16 @@ def scraper(url, resp):
     # Filter out duplicate and invalid urls
     unique_links = set()
     for link in links:
-        if link and link not in unique_links and is_valid(link):
+        if link:
+            if link in unique_links:
+                scrap_logger.info(f"Filtered out duplicate URL: {link}")
+                continue
+            if not is_valid(link):
+                scrap_logger.info(f"Filtered out invalid URL: {link}")
+                continue
             unique_links.add(link)
         else: 
-            scrap_logger.info(f"Filtered out duplicate or invalid URL: {link}")
+            scrap_logger.info(f"Link does not exist: {link}")
 
     return list(unique_links)
 
