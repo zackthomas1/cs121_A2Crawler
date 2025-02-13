@@ -52,7 +52,7 @@ def scraper(url, resp):
         for visited_page_hash in visited_content_simhashes:
             dist = distance(current_page_hash, visited_page_hash)
             if dist < THREASHOLD:
-                scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match")
+                scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
                 return []
         visited_content_simhashes.add(current_page_hash)
     except Exception as e:
