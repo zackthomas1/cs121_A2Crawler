@@ -4,6 +4,7 @@ from robots import *
 from bs4 import BeautifulSoup
 from utils import get_logger, normalize
 from urllib.parse import urljoin, urlparse
+import time
 
 scrap_logger = get_logger("SCRAPER")
 
@@ -16,6 +17,7 @@ visited_content_simhashes = set()
 
 #
 visited_sitemaps = set()
+
 
 def scraper(url, resp):
 
@@ -49,34 +51,36 @@ def scraper(url, resp):
         # soup contains only human-readable texts now to be compared near-duplicate
         text = soup.get_text(separator=" ", strip=True)
         
-       #TODO: Save text content to disk
+        # TODO: Save text content to disk (consider partial saving)
         
+
+        # Check for Near-Duplicates using Simhash algorithm
         THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
         current_page_hash = compute_simhash(text)
         for visited_page_hash in visited_content_simhashes:
             dist = distance(current_page_hash, visited_page_hash)
             if dist < THREASHOLD:
-                scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match")
+                scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
                 return []
         visited_content_simhashes.add(current_page_hash)
+
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
     
+    # Extract links with another soup
     links = extract_next_links(url, resp)
     
-    # Filter out duplicate and invalid urls
+    # Filter out duplicate and invalid urls (message log if needed)
     unique_links = set()
     for link in links:
-        if link:
-            if link in unique_links:
-                scrap_logger.info(f"Filtered out duplicate URL: {link}")
-                continue
-            if not is_valid(link):
-                scrap_logger.info(f"Filtered out invalid URL: {link}")
-                continue
+        if not link:
+            scrap_logger.info("Filtered out an empty or none URL")
+        elif link in unique_links:
+            scrap_logger.info(f"Filtered out duplicate URL: {link}")
+        elif not is_valid(link):
+            scrap_logger.info(f"Filtered out invalid URL: {link}")
+        else:
             unique_links.add(link)
-        else: 
-            scrap_logger.info(f"Link does not exist: {link}")
 
     return list(unique_links)
 
@@ -105,10 +109,12 @@ def extract_next_links(url, resp):
             clean_url = normalize(parsed._replace(query="", fragment="").geturl())
 
             links.append(clean_url)
+
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
 
     return links
+
 
 def is_valid(url: str) -> bool:
     # Decide whether to crawl this url or not. 
@@ -202,8 +208,10 @@ def get_sitemap_urls(url: str) -> list[str]:
     else:
         return []
 
+
 def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
-    
+
+    time.sleep(config.time_delay)
     logger.info(f"Downloading sitemap: {sitemap_url}")
     resp = download(sitemap_url, config, logger)
     visited_sitemaps.add(sitemap_url)
@@ -232,6 +240,7 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
             # If it's another sitemap that's valid, process
             if is_xml_doc(url) and is_valid(url):
                 # Download the sitemap
+                time.sleep(config.time_delay)
                 logger.info(f"Downloading sitemap: {url}")
                 new_resp = download(url, config, logger)
 
