@@ -45,6 +45,8 @@ def scraper(url, resp):
         # soup contains only human-readable texts now to be compared near-duplicate
         text = soup.get_text(separator=" ", strip=True)
         
+       #TODO: Save text content to disk
+        
         THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
         current_page_hash = compute_simhash(text)
         for visited_page_hash in visited_content_simhashes:
@@ -133,6 +135,11 @@ def is_valid(url: str) -> bool:
         for segment in path_segments: 
             if segment.isalnum() and len(segment) > MAX_SEGMENT_LENGTH:
                 return False 
+
+        # Filter out "archieve.ics.uci.edu" domain. 
+        # This is the machine learning archieve.
+        if "archive.ics.uci.edu" in parsed_url.netloc:
+            return False
 
         # Filter out calendar pages which are potentially low-information pages.
         if "calendar" in parsed_url.path.lower() or "calendar" in parsed_url.netloc.lower():

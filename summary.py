@@ -14,7 +14,12 @@ from utils.server_registration import get_cache_server
 
 from urllib.parse import urljoin, urlparse
 
-
+"""
+Crawlinging thresholds
+------------------------
+We should be crawling at least 15-20k url pages, 
+but no more than 100k.
+"""
 
 stop_words = {
     "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at",
