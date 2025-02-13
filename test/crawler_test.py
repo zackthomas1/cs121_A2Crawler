@@ -283,19 +283,8 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid("https://ics.uci.edu/author/kaphan2/page/4"))
         self.assertTrue(scraper.is_valid("https://www.ics.uci.edu/~thornton/inf45"))
 
-        # self.assertTrue(scraper.is_valid("https://connectedlearning.uci.edu/media"))
-        # self.assertTrue(scraper.is_valid("https://cpri.uci.edu/category/events"))
-        # self.assertTrue(scraper.is_valid("https://datascience.uci.edu"))
-        # self.assertTrue(scraper.is_valid("https://futurehealth.uci.edu/2020-distinguished-lecture-series"))
-        # self.assertTrue(scraper.is_valid("https://www.igb.uci.edu/seminars"))
-        # self.assertTrue(scraper.is_valid("http://isr.uci.edu/isr-events/upcoming"))
-        # self.assertTrue(scraper.is_valid("https://ics.uci.edu/happening/annual-reports-brochures"))
-        # self.assertTrue(scraper.is_valid("http://isr.uci.edu"))
-        # self.assertTrue(scraper.is_valid("https://directory.uci.edu"))
-        # self.assertTrue(scraper.is_valid("https://uci.edu/visit/maps.php"))
-        # self.assertTrue(scraper.is_valid("https://ics.uci.edu/people"))
-        # self.assertTrue(scraper.is_valid("https://em.uci.edu"))
-        # self.assertTrue(scraper.is_valid("https://uci.edu/privacy/index.php"))
+        self.assertFalse(scraper.is_valid("https://connectedlearning.uci.edu/media"))
+        self.assertFalse(scraper.is_valid("https://ics.uci.edu/people"))
 
     def test_disallowed_domain(self):
         self.assertFalse(scraper.is_valid("https://www.cs.ucla.edu/history/"))
@@ -520,7 +509,7 @@ class TestSimHash(unittest.TestCase):
             <body>
                 <p> Hello Worrld Hello </p>
                 <a href="https://ics.uci.edu/page2">Page 2</a>
-                <p> Hello Mon Bye </p>
+                <p> Hello Moon Bye </p>
             </body>
         </html>
         '''
