@@ -283,6 +283,20 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid("https://ics.uci.edu/author/kaphan2/page/4"))
         self.assertTrue(scraper.is_valid("https://www.ics.uci.edu/~thornton/inf45"))
 
+        # self.assertTrue(scraper.is_valid("https://connectedlearning.uci.edu/media"))
+        # self.assertTrue(scraper.is_valid("https://cpri.uci.edu/category/events"))
+        # self.assertTrue(scraper.is_valid("https://datascience.uci.edu"))
+        # self.assertTrue(scraper.is_valid("https://futurehealth.uci.edu/2020-distinguished-lecture-series"))
+        # self.assertTrue(scraper.is_valid("https://www.igb.uci.edu/seminars"))
+        # self.assertTrue(scraper.is_valid("http://isr.uci.edu/isr-events/upcoming"))
+        # self.assertTrue(scraper.is_valid("https://ics.uci.edu/happening/annual-reports-brochures"))
+        # self.assertTrue(scraper.is_valid("http://isr.uci.edu"))
+        # self.assertTrue(scraper.is_valid("https://directory.uci.edu"))
+        # self.assertTrue(scraper.is_valid("https://uci.edu/visit/maps.php"))
+        # self.assertTrue(scraper.is_valid("https://ics.uci.edu/people"))
+        # self.assertTrue(scraper.is_valid("https://em.uci.edu"))
+        # self.assertTrue(scraper.is_valid("https://uci.edu/privacy/index.php"))
+
     def test_disallowed_domain(self):
         self.assertFalse(scraper.is_valid("https://www.cs.ucla.edu/history/"))
         self.assertFalse(scraper.is_valid("https://www.cs.usc.edu/about/news/"))
@@ -421,35 +435,37 @@ class TestScraper(unittest.TestCase):
         self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_query))
 
+    def test_avoid_archive_links (self):
+        url_archive = "https://archive.ics.uci.edu/dataset/53/iris"
+
+        self.assertFalse(scraper.is_valid(url_archive))
+
     def test_avoid_calendar_links (self):
-        url = "https://ics.uci.edu"
         url_calendar = "http://calendar.ics.uci.edu/calendar.php"
 
-        self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_calendar))
 
     def test_avoid_commit_links (self):
-        url = "https://ics.uci.edu"
         url_commit = "http://gitlab.ics.uci.edu/curtic3/checkers_student/-/commit/120d8ceab82bfd7a92f94767ae51095c5e11b641"
 
-        self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_commit))
 
     def test_avoid_readme_md_trap_detection(self): 
-        url = "https://ics.uci.edu"
         url_readme_1 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/f179207851371a407b7a7bea832d6ee07baddd26/readme.md"
         url_readme_2 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/readme.md"
 
-        self.assertTrue(scraper.is_valid(url))
         self.assertFalse(scraper.is_valid(url_readme_1))
         self.assertFalse(scraper.is_valid(url_readme_2))
 
     def test_id_trap_detection(self): 
         trap_url_1 = "https://www.ics.uci.edu/path/dffe26132d98b7a7dc702b0ec5a4a76000d48373"
         trap_url_2 = "https://www.ics.uci.edu/path/18f79a635a0a2f6aa84c9f116856a253d6c257ba"
+        trap_url_3 = "https://uci.zoom.us/meeting/register/tJIrduqsrTspGtaNnebaEUenSu_WF6Y9WGf"
 
         self.assertFalse(scraper.is_valid(trap_url_1))
         self.assertFalse(scraper.is_valid(trap_url_2))
+        self.assertFalse(scraper.is_valid(trap_url_3))
+
 
     def test_extract_next_line_defragment(self):
         html_content_1 = '''
