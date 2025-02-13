@@ -36,7 +36,6 @@ class Frontier(object):
                 self.add_url(seed_url)
                 
                 # TODO: Trace and verify whether this is working
-                # TODO: 
                 # Add urls from site maps to fronter
                 sitemap_urls = seed_frontier_from_sitemap(seed_url, self.config, self.logger)
                 for site_url in sitemap_urls:
@@ -63,9 +62,8 @@ class Frontier(object):
 
     def get_tbd_url(self):
         try:
-            # Log remaining websites / progress
-            self.logger.info(
-                f"{len(self.to_be_downloaded)} urls remaining.")
+            self.logger.info(f"Uncrawled URLS: {len(self.to_be_downloaded)}.")
+
             return self.to_be_downloaded.pop()
         except IndexError:
             return None

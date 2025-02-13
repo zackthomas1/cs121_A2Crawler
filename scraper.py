@@ -8,10 +8,14 @@ import time
 
 scrap_logger = get_logger("SCRAPER")
 
-# Tracks visited urls to avoid duplicates
-# visited_content_checksums = set()
+# Store simhashes of previously visted pages to avoid scraping duplicate content
+# For less than 1 million simhashes storing simhashes in memory is preferred
+# Time complexity of python set in operation is O(1). 
+# For 20,000 SimHashes, the estimated memory usage is: 20,000 × 8 bytes = 160,000 bytes = 160 KB
 visited_content_simhashes = set()
+# visited_content_checksums = set()
 
+#
 visited_sitemaps = set()
 
 
@@ -79,7 +83,6 @@ def scraper(url, resp):
             unique_links.add(link)
 
     return list(unique_links)
-
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -207,6 +210,7 @@ def get_sitemap_urls(url: str) -> list[str]:
 
 
 def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
+
     time.sleep(config.time_delay)
     logger.info(f"Downloading sitemap: {sitemap_url}")
     resp = download(sitemap_url, config, logger)
