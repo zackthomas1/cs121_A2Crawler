@@ -221,6 +221,7 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
             # If it's another sitemap that's valid, process
             if is_xml_doc(url) and is_valid(url):
                 # Download the sitemap
+                time.sleep(config.time_delay)
                 logger.info(f"Downloading sitemap: {url}")
                 new_resp = download(url, config, logger)
 
