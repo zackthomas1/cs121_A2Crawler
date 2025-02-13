@@ -43,7 +43,7 @@ def scraper(url, resp):
         # soup contains only human-readable texts now to be compared near-duplicate
         text = soup.get_text(separator=" ", strip=True)
         
-        THREASHOLD = 6
+        THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
         current_page_hash = compute_simhash(text)
         for visited_page_hash in visited_content_simhashes:
             dist = distance(current_page_hash, visited_page_hash)
