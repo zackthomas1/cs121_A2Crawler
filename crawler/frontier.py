@@ -6,8 +6,7 @@ from threading import Thread, RLock
 from queue import Queue, Empty
 
 from utils import get_logger, get_urlhash, normalize
-from scraper import is_valid
-import robots
+from scraper import is_valid, seed_frontier_from_sitemap
 
 
 class Frontier(object):
@@ -37,8 +36,9 @@ class Frontier(object):
                 self.add_url(seed_url)
                 
                 # TODO: Trace and verify whether this is working
+                # TODO: 
                 # Add urls from site maps to fronter
-                sitemap_urls = robots.seed_frontier_from_sitemap(seed_url, self.config, self.logger)
+                sitemap_urls = seed_frontier_from_sitemap(seed_url, self.config, self.logger)
                 for site_url in sitemap_urls:
                     self.add_url(site_url)
 

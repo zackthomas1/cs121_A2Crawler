@@ -7,8 +7,6 @@ from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
-import requests
-
 robots_logger = get_logger("ROBOTS")
 
 # Dictionary to store parsed robots.txt files for different domains
@@ -60,68 +58,3 @@ def get_robots_parser(url: str) -> RobotFileParser:
     robots_parsers[domain] = parser # Cache parser
     return parser
 
-def get_sitemap_urls(url: str) -> list[str]: 
-    """
-    Extracts urls of sitemaps from robots.txt
-    """
-
-    parser = get_robots_parser(url)
-
-    # If no parser returned, no robots.txt exists
-    if not parser:
-        return []
-
-    # Parses the sitemap parameter in 'robots' files and return the sitemap urls
-    sitemaps_urls = parser.site_maps()
-
-    # is the sitemaps list empty?
-    if sitemaps_urls: 
-        robots_logger.info(f"Found sitemaps for {url}: {sitemaps_urls}")
-        return sitemaps_urls
-    else:
-        return []
-
-def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
-    logger.info(f"Downloading sitemap: {sitemap_url}")
-    resp = download(sitemap_url, config, logger)
-
-    # If sitemap is invalid, return empty list
-    if resp.status != 200 or not resp.raw_response:
-        logger.warning(f"Failed to download sitemap: {sitemap_url}, status: {resp.status}")
-        return []
-
-    try: 
-        tree = ET.fromstring(resp.raw_response.content)
-        urls = set()
-        # Iterate over <loc> tags in xml
-        for url_element in tree.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc"):
-            url = url_element.text.strip()
-            
-            # If it's a nested XML file within the sitemap, process it. Otherwise, add to urls
-            if url:
-                if is_xml_doc(url):
-                    urls.update(get_sitemap_urls(url, config, logger))
-                else:
-                    urls.add(url)
-
-        logger.info(f"Extracted {len(urls)} URLs from {sitemap_url}")
-        return list(urls)
-
-    except ParseError as e:
-        logger.error(f"XML parsing error for sitemap {sitemap_url}: {e}")
-    except Exception as e:
-        logger.error(f"Unexpected error parsing sitemap {sitemap_url}: {e}")
-
-    return []
-
-
-def seed_frontier_from_sitemap(url: str, config: Config, logger: Logger) -> list[str]:
-    sitemap_urls = get_sitemap_urls(url)
-
-    links = []
-    if sitemap_urls:
-        for sitemap in sitemap_urls:
-            sitemap_links = fetch_sitemap_urls(sitemap, config, logger)
-            links.extend(sitemap_links)
-
-    return links
