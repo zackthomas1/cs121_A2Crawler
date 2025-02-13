@@ -97,7 +97,7 @@ def Tokenize(line_content: str) -> list[str]:
 
     return token_list
 
-def ComputeTokenFrequencies(token_list: list[str], token_frequency: dict[str,int]):
+def ComputeTokenFrequencies(token_list: list[str], token_frequency: dict[str,int]) -> None:
     """
     Takes a list of tokens and updates the values of frequency table.
 
@@ -105,7 +105,7 @@ def ComputeTokenFrequencies(token_list: list[str], token_frequency: dict[str,int
         token_list (list[str]) : A list of tokens
         token_frequency (dict[str,int]) : A dictionary which maps tokens to their frequency of appearence.
     
-    Returns:
+    Returns (Passing by reference):
         token_frequency (dict[str,int]) : Updated token-frequency table returned through "token_frequency" parameter
     
     Runtime Complexity: 
@@ -120,7 +120,7 @@ def ComputeTokenFrequencies(token_list: list[str], token_frequency: dict[str,int
             #add word to dictionary and set value to 1
             token_frequency[token] = 1
 
-def PrintTokenFrequency(token_frequency: dict[str, int]):
+def PrintTokenFrequency(token_frequency: dict[str, int]) -> None:
     """
     Prints out the word frequency count onto the screen. 
     The printout is ordered by non-increasing frequency. 
