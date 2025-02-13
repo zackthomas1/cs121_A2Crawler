@@ -5,16 +5,16 @@ import hashlib
 def compute_hash_value(content: str) -> str:
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
-def compute_simhash(text , hashbits = 32): 
+def compute_simhash(text, hashbits = 64): 
     """
     """
     # create a list of tokens(words) in the html text
     # and compute the frequence of each token
     tokens = Tokenize(text)
     token_freq_table = {}
-    ComputeTokenFrequencies(tokens, token_freq_table)
+    ComputeTokenFrequencies(tokens, token_freq_table)  # token_freq_table updated as {token: freq}
 
-    #
+    # initialize all hashbits to 0
     vector = [0] * hashbits
 
     for token in tokens:

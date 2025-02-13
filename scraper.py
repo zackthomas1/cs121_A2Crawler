@@ -1,6 +1,6 @@
 import re
 from simhash import compute_simhash, distance, compute_hash_value
-import robots
+from robots import *
 from bs4 import BeautifulSoup
 from utils import get_logger, normalize
 from urllib.parse import urljoin, urlparse
@@ -10,6 +10,8 @@ scrap_logger = get_logger("SCRAPER")
 # Tracks visited urls to avoid duplicates
 # visited_content_checksums = set()
 visited_content_simhashes = set()
+
+visited_sitemaps = set()
 
 def scraper(url, resp):
 
@@ -35,11 +37,17 @@ def scraper(url, resp):
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-        text = soup.get_text(separator= " ", strip=True)
 
-        #TODO: Save text content to disk
+        # Remove the text of CSS, JS, metadata, alter for JS, embeded websites
+        for markup in soup.find_all(["style", "script", "meta", "noscript", "iframe"]):  
+            markup.decompose()  # remove all markups stated above
+
+        # soup contains only human-readable texts now to be compared near-duplicate
+        text = soup.get_text(separator=" ", strip=True)
         
-        THREASHOLD = 6
+       #TODO: Save text content to disk
+        
+        THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
         current_page_hash = compute_simhash(text)
         for visited_page_hash in visited_content_simhashes:
             dist = distance(current_page_hash, visited_page_hash)
@@ -143,7 +151,7 @@ def is_valid(url: str) -> bool:
 
         # Check robot.txt rules to follow politeness 
         # and do not fetch from paths we are not allowed
-        if not robots.can_fetch(url):
+        if not can_fetch(url):
             return False
        
         return not re.match(
@@ -160,3 +168,91 @@ def is_valid(url: str) -> bool:
     except TypeError:
         print ("TypeError for ", parsed_url)
         return False
+
+
+# Sitemap Helper Methods
+def get_sitemap_urls(url: str) -> list[str]: 
+    """
+    Extracts urls of sitemaps from robots.txt
+    """
+
+    parser = get_robots_parser(url)
+
+    # If no parser returned, no robots.txt exists
+    if not parser:
+        return []
+
+    # Parses the sitemap parameter in 'robots' files and return the sitemap urls
+    sitemaps_urls = parser.site_maps()
+
+    # is the sitemaps list empty?
+    if sitemaps_urls: 
+        scrap_logger.info(f"Found sitemaps for {url}: {sitemaps_urls}")
+        return sitemaps_urls
+    else:
+        return []
+
+def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
+    logger.info(f"Downloading sitemap: {sitemap_url}")
+    resp = download(sitemap_url, config, logger)
+    visited_sitemaps.add(sitemap_url)
+
+    # If sitemap is invalid, return empty list
+    if resp.status != 200 or not resp.raw_response:
+        logger.warning(f"Failed to download sitemap: {sitemap_url}, status: {resp.status}")
+        return []
+
+    # TODO: NEEDS TESTING, the recursive downloading and adding of sitemap content might become unmanagable
+    try: 
+        tree = ET.fromstring(resp.raw_response.content)
+        urls = set()
+
+        # Gather all URLs in the sitemap
+        url_element_stack = [url_element.text.strip() for url_element in tree.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+
+        logger.info(f"Extracted URLS from sitemap {sitemap_url}: {url_element_stack}")
+
+        # Process all urls
+        while url_element_stack:
+            # Pop a url off the stack
+            url = url_element_stack.pop().strip()
+            logger.info(f"Processing site within sitemap: {url}")
+
+            # If it's another sitemap that's valid, process
+            if is_xml_doc(url) and is_valid(url):
+                # Download the sitemap
+                logger.info(f"Downloading sitemap: {url}")
+                new_resp = download(url, config, logger)
+
+                # Mark the sitemap as visited
+                visited_sitemaps.add(url)
+
+                # If valid, extend url_element_stack with the additional urls
+                if (new_resp.status != 200 or not new_resp.raw_response):
+                    logger.warning(f"Failed to download sitemap: {url}, status: {new_resp.status}")
+                else:
+                    url_element_stack.extend([elem.text.strip() for elem in ET.fromstring(new_resp.raw_response.content).findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")])
+            # If just a site, add
+            else:
+                urls.add(url)
+
+        logger.info(f"Extracted {len(urls)} URLs from {sitemap_url}")
+        return list(urls)
+
+    except Exception as e:
+        logger.error(f"Unexpected error parsing sitemap {sitemap_url}: {e}")
+
+    return []
+
+
+def seed_frontier_from_sitemap(url: str, config: Config, logger: Logger) -> list[str]:
+    sitemap_urls = get_sitemap_urls(url)
+
+    links = []
+    if sitemap_urls:
+        for sitemap in sitemap_urls:
+            # TODO: This also returns other sitemaps. We need sitemap detection for the purpose of downloading additional
+            sitemap_links = fetch_sitemap_urls(sitemap, config, logger)
+            links.extend(sitemap_links)
+
+    return links
