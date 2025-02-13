@@ -7,6 +7,8 @@ from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
+
+#
 robots_logger = get_logger("ROBOTS")
 
 # Dictionary to store parsed robots.txt files for different domains
@@ -40,7 +42,7 @@ def get_robots_parser(url: str) -> RobotFileParser:
     scheme = parsed_url.scheme
     domain = parsed_url.netloc
     
-    # Return cached parser if exists    
+    # if parser for domain already exist and is cached, retrieve it
     if domain in robots_parsers:
         return robots_parsers[domain] # return cached parser
 
