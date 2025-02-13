@@ -4,6 +4,7 @@ from robots import *
 from bs4 import BeautifulSoup
 from utils import get_logger, normalize
 from urllib.parse import urljoin, urlparse
+import time
 
 scrap_logger = get_logger("SCRAPER")
 
@@ -193,6 +194,7 @@ def get_sitemap_urls(url: str) -> list[str]:
         return []
 
 def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
+    time.sleep(config.time_delay)
     logger.info(f"Downloading sitemap: {sitemap_url}")
     resp = download(sitemap_url, config, logger)
     visited_sitemaps.add(sitemap_url)
@@ -221,6 +223,7 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
             # If it's another sitemap that's valid, process
             if is_xml_doc(url) and is_valid(url):
                 # Download the sitemap
+                time.sleep(config.time_delay)
                 logger.info(f"Downloading sitemap: {url}")
                 new_resp = download(url, config, logger)
 
