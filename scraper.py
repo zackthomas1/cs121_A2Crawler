@@ -2,14 +2,12 @@ import re
 import time
 
 import summary
-from simhash import compute_simhash, distance, compute_hash_value
-from tokenizer import Tokenize, ComputeTokenFrequencies
 from robots import *
+import simhash
 
 from bs4 import BeautifulSoup
 from utils import get_logger, normalize
 from urllib.parse import urljoin, urlparse
-
 
 scrap_logger = get_logger("SCRAPER")
 
@@ -22,7 +20,6 @@ visited_content_simhashes = set()
 
 #
 visited_sitemaps = set()
-
 
 def scraper(url, resp):
 
@@ -51,9 +48,12 @@ def scraper(url, resp):
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
 
+    # Create a list of tokens(words) in the html text
+    page_tokens = simhash.tokenize(text)
+
     # Update summary statistics
-    summary.update_token_frequency("summary.shelve",text)
-    summary.update_page_lengths("summary.shelve", url, text)
+    summary.update_token_frequency("summary.shelve",page_tokens)
+    summary.update_page_lengths("summary.shelve", url, page_tokens)
 
     # # Check for EXACT content duplicate (Checksum) 
     # content_checksum = compute_hash_value(text)
@@ -63,11 +63,10 @@ def scraper(url, resp):
     # visited_content_checksums.add(content_checksum)
 
     # Check for NEAR duplicate content (Simhash)
-    THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
-    current_page_hash = compute_simhash(text)
+    current_page_hash = simhash.compute_simhash(page_tokens)
     for visited_page_hash in visited_content_simhashes:
-        dist = distance(current_page_hash, visited_page_hash)
-        if dist < THREASHOLD:
+        dist = simhash.calculate_hash_distance(current_page_hash, visited_page_hash)
+        if dist < simhash.THRESHOLD:
             scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
             return []
     visited_content_simhashes.add(current_page_hash)

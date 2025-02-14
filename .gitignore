@@ -112,4 +112,8 @@ venv.bak/
 # git
 .git/
 
+#
 Logs/
+
+#
+test_crawler

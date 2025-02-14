@@ -37,28 +37,26 @@ stop_words = {
     "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"
 }
 
-def restart_summary_stats(summary_save_path, restart):
+def restart_summary_stats(summary_save_path: str, restart: bool) -> None:
     if restart:
         with shelve.open(summary_save_path) as db:
             db["token_frequencies"] = Counter()
             db["page_lengths"] = {}
             db.sync()
 
-def update_page_lengths(summary_save_path, url, text):
+def update_page_lengths(summary_save_path: str, url: str, tokens: list[str]) -> None:
     with shelve.open(summary_save_path) as db:
         page_lengths = db.get("page_lengths", {})
 
         # update
-        token_count = len(re.findall(r'\b[a-zA-Z]{1,}\b', text.lower()))
+        token_count = len(tokens)
         page_lengths[url] = token_count
 
         # store back
         db["page_lengths"] = page_lengths
         db.sync()   # force disk write
 
-def update_token_frequency(summary_save_path, text): 
-    tokens = re.findall(r'\b[a-zA-Z]{1,}\b', text.lower())
-
+def update_token_frequency(summary_save_path: str, tokens: list[str]) -> None: 
     with shelve.open(summary_save_path) as db:
         token_frequencies = db.get("token_frequencies", Counter())
         
@@ -70,7 +68,7 @@ def update_token_frequency(summary_save_path, text):
         db["token_frequencies"] = token_frequencies
         db.sync()   # force disk write
 
-def unique_pages(frontier_save_path):
+def unique_pages(frontier_save_path: str) -> int:
     """
     Counts the number of unique urls crawled in the frontier database
     """
@@ -92,7 +90,7 @@ def unique_pages(frontier_save_path):
 
     return len(unique_urls) 
 
-def get_longest_page(summary_save_path): 
+def get_longest_page(summary_save_path: str) -> tuple[str, int]: 
     """
     Find the longest page based on word count, excludes html markup text
     """
@@ -107,7 +105,7 @@ def get_longest_page(summary_save_path):
         
         return longest_page
 
-def get_common_words(summary_save_path, k): 
+def get_common_words(summary_save_path: str, k: int) -> dict[str, int]: 
     """
     Gets 50 most common words across all the crawled pages
     """
@@ -116,7 +114,7 @@ def get_common_words(summary_save_path, k):
         token_frequencies = db.get("token_frequencies", Counter())
         return token_frequencies.most_common(k)
 
-def ics_subdomains(frontier_save_path):
+def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
     """
     Counts all the subdomains of ics.uci.edu
     """
