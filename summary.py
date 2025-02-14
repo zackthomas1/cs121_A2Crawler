@@ -37,6 +37,39 @@ stop_words = {
     "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"
 }
 
+def restart_summary_stats(summary_save_path, restart):
+    if restart:
+        with shelve.open(summary_save_path) as db:
+            db["token_frequencies"] = Counter()
+            db["page_lengths"] = {}
+            db.sync()
+
+def update_page_lengths(summary_save_path, url, text):
+    with shelve.open(summary_save_path) as db:
+        page_lengths = db.get("page_lengths", {})
+
+        # update
+        token_count = len(re.findall(r'\b[a-zA-Z]{1,}\b', text.lower()))
+        page_lengths[url] = token_count
+
+        # store back
+        db["page_lengths"] = page_lengths
+        db.sync()   # force disk write
+
+def update_token_frequency(summary_save_path, text): 
+    tokens = re.findall(r'\b[a-zA-Z]{1,}\b', text.lower())
+
+    with shelve.open(summary_save_path) as db:
+        token_frequencies = db.get("token_frequencies", Counter())
+        
+        # update
+        filtered_words = [token for token in tokens if token not in stop_words]
+        token_frequencies.update(filtered_words)
+
+        # store back
+        db["token_frequencies"] = token_frequencies
+        db.sync()   # force disk write
+
 def unique_pages(frontier_save_path):
     """
     Counts the number of unique urls crawled in the frontier database
@@ -59,57 +92,29 @@ def unique_pages(frontier_save_path):
 
     return len(unique_urls) 
 
-def longest_page(crawled_pages_dir): 
+def get_longest_page(summary_save_path): 
     """
     Find the longest page based on word count, excludes html markup text
     """
     longest_page = (None, 0)
 
-    for filename in os.listdir(crawled_pages_dir):
-        file_path = os.path.join(crawled_pages_dir, filename)
-        with open(file_path, "r", encoding="utf-8") as file: 
-            try:
-                soup = BeautifulSoup(file, 'html.parser')
-                text = soup.get_text(separator= " ", strip=True)
+    with shelve.open(summary_save_path) as db:
+        page_lengths = db.get("page_lengths", {})
 
-                # Use regular expression to search for words
-                # letters a-z and at least 1 letter
-                word_count = re.findall(r'\b[a-zA-Z]\b, text')
-                
-                if word_count > longest_page[1]:
-                    longest_page = (filename, word_count)
-            except Exception as e:
-                return None
-    return longest_page
+        for key, value in page_lengths.items():
+            if value > longest_page[1]:
+                longest_page = (key, value)
+        
+        return longest_page
 
-def get_common_words(frontier_save_path, config, logger, words_count): 
+def get_common_words(summary_save_path, k): 
     """
     Gets 50 most common words across all the crawled pages
     """
-   
-    # check first that the path to the frontier save file exist
-    if not os.path.exists(frontier_save_path): 
-        return None
-    
-    crawled_pages_dir = []
-    with shelve.open(frontier_save_path, 'r') as db: 
-        for url, completed in db.values(): 
-            if completed: 
-                crawled_pages_dir.append(url)
-
-    word_frequencies = Counter()
-    for page_url in crawled_pages_dir:
-        try:
-            resp = download(page_url, config, logger)
-            soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-            text = soup.get_text(separator=" ", strip=True)
-            words = re.findall(r'\b{a-zA-Z}{2,}\b', text.lower())
-            filtered_words = [word for word in words if word not in stop_words]
-            word_frequencies.update(filtered_words)
-        except Exception as e:
-            return None
-    
-    return word_frequencies.most_common(words_count)
+    # Load existing save file, or create one if it does not exist.
+    with shelve.open(summary_save_path) as db:
+        token_frequencies = db.get("token_frequencies", Counter())
+        return token_frequencies.most_common(k)
 
 def ics_subdomains(frontier_save_path):
     """
@@ -136,19 +141,7 @@ def ics_subdomains(frontier_save_path):
     return dict(sorted(subdomains.items()))
 
 if __name__ == "__main__":
-    # parser = ArgumentParser()
-    # parser.add_argument("--config_file", type=str, default="config.ini")
-    # args = parser.parse_args()
-    
-    # cparser = ConfigParser()
-    # cparser.read(args.config_file)
-    # config = Config(cparser)
-    # config.cache_server = get_cache_server(config, False)
-
-    # logger = get_logger("Summary")
-
     print(f" There are {unique_pages('frontier.shelve')} unique pages")
-    # print(f"The longest page is {longest_page('frontier.shelve', config, logger, 50)}")
-    # print(f"The most common words are:\n {get_common_words('frontier.shelve', config, logger, 50)}")
-    print(f"{ics_subdomains('frontier.shelve')}")
-
+    print(f"The longest page is {get_longest_page('summary.shelve')}.")
+    print(f"The most common words are:\n\t{get_common_words('summary.shelve',50)}.")
+    print(f"ICS Subdomains:\n\t{ics_subdomains('frontier.shelve')}")
