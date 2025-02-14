@@ -57,10 +57,10 @@ def compute_simhash(text: str, hashbits: int = 128) -> int:
     Constraints: Number of entries in sumed_weights vector and hashbits must equal; otherwise, causes Indexerror
     """
     # Create a list of tokens(words) in the html text
-    #   and compute the frequence of each token
+    # and compute the frequence of each token
     tokens: list[str] = Tokenize(text)
-    token_freq_table = {}
-    ComputeTokenFrequencies(tokens, token_freq_table)  # token_freq_table updated as {token: freq}
+    # token_freq_table = {}
+    # ComputeTokenFrequencies(tokens, token_freq_table)  # token_freq_table updated as {token: freq}
 
     ## Initialize all hashbits to 0
     vector = [0] * hashbits
