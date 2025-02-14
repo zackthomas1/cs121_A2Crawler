@@ -1,10 +1,15 @@
 import re
+import time
+
+import summary
 from simhash import compute_simhash, distance, compute_hash_value
+from tokenizer import Tokenize, ComputeTokenFrequencies
 from robots import *
+
 from bs4 import BeautifulSoup
 from utils import get_logger, normalize
 from urllib.parse import urljoin, urlparse
-import time
+
 
 scrap_logger = get_logger("SCRAPER")
 
@@ -32,14 +37,7 @@ def scraper(url, resp):
             scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
             return []
 
-    # # Check for EXACT content duplicate (Checksum) 
-    # content_checksum = compute_hash_value(resp.raw_response.content)
-    # if content_checksum in visited_content_checksums:
-    #     scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
-    #     return []
-    # visited_content_checksums.add(content_checksum)
-
-    # Check for NEAR duplicate content (Simhash)
+    # parse html document for text
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
@@ -47,26 +45,33 @@ def scraper(url, resp):
         # Remove the text of CSS, JS, metadata, alter for JS, embeded websites
         for markup in soup.find_all(["style", "script", "meta", "noscript", "iframe"]):  
             markup.decompose()  # remove all markups stated above
-
+        
         # soup contains only human-readable texts now to be compared near-duplicate
         text = soup.get_text(separator=" ", strip=True)
-        
-        # TODO: Save text content to disk (consider partial saving)
-        
-
-        # Check for Near-Duplicates using Simhash algorithm
-        THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
-        current_page_hash = compute_simhash(text)
-        for visited_page_hash in visited_content_simhashes:
-            dist = distance(current_page_hash, visited_page_hash)
-            if dist < THREASHOLD:
-                scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
-                return []
-        visited_content_simhashes.add(current_page_hash)
-
     except Exception as e:
         scrap_logger.fatal(f"Error parsing {url}: {e}")
-    
+
+    # Update summary statistics
+    summary.update_token_frequency("summary.shelve",text)
+    summary.update_page_lengths("summary.shelve", url, text)
+
+    # # Check for EXACT content duplicate (Checksum) 
+    # content_checksum = compute_hash_value(text)
+    # if content_checksum in visited_content_checksums:
+    #     scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
+    #     return []
+    # visited_content_checksums.add(content_checksum)
+
+    # Check for NEAR duplicate content (Simhash)
+    THREASHOLD = 6  # Hyper-parameter (convention for near-dup threshold is 3~10)
+    current_page_hash = compute_simhash(text)
+    for visited_page_hash in visited_content_simhashes:
+        dist = distance(current_page_hash, visited_page_hash)
+        if dist < THREASHOLD:
+            scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
+            return []
+    visited_content_simhashes.add(current_page_hash)
+
     # Extract links with another soup
     links = extract_next_links(url, resp)
     
@@ -139,7 +144,7 @@ def is_valid(url: str) -> bool:
             return False
 
         # Avoid infinite trap pattern
-        MAX_DEPTH = 6
+        MAX_DEPTH = 8
         path_segments = [segment for segment in parsed_url.path.split('/') if segment]
         if len(path_segments) > MAX_DEPTH:
             return False
@@ -178,8 +183,7 @@ def is_valid(url: str) -> bool:
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
-            + r"|md)$", parsed_url.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed_url.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed_url)
