@@ -16,7 +16,6 @@ def main(config_file, restart):
     summary.restart_summary_stats("summary.shelve", restart)
     crawler.start()
 
-
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--restart", action="store_true", default=False)

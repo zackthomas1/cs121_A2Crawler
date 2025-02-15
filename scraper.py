@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from utils import get_logger, normalize
 from urllib.parse import urljoin, urlparse
 
-scrap_logger = get_logger("SCRAPER")
+scrap_logger = get_logger("SCRAPPER")
 
 # Store simhashes of previously visted pages to avoid scraping duplicate content
 # For less than 1 million simhashes storing simhashes in memory is preferred
@@ -33,6 +33,10 @@ def scraper(url, resp):
         else:
             scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
             return []
+
+    # # Check that response is valid html document
+    # if not is_html_resp(url, resp):
+    #     return []
 
     # parse html document for text
     try:
@@ -174,6 +178,9 @@ def is_valid(url: str) -> bool:
         if not can_fetch(url):
             return False
        
+        #TODO: add a filter for urls to pdf files that do not contain .pdf file extension in path
+        # example: https://www.informatics.uci.edu/files/pdf/InformaticsBrochure-March2018
+
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -182,7 +189,8 @@ def is_valid(url: str) -> bool:
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed_url.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
+            + r"|img|java|war|sql|mpg|ff|sh|ppsx|py|apk|svg|conf|cpp|fig|cls|ipynb|bam|odp|odc)$", parsed_url.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed_url)
@@ -267,7 +275,6 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
 
     return []
 
-
 def seed_frontier_from_sitemap(url: str, config: Config, logger: Logger) -> list[str]:
     sitemap_urls = get_sitemap_urls(url)
 
@@ -279,3 +286,20 @@ def seed_frontier_from_sitemap(url: str, config: Config, logger: Logger) -> list
             links.extend(sitemap_links)
 
     return links
+
+def is_html_resp(url, resp):
+    """
+    Checks that the response contains text in html format 
+    and does not contain an attachment that will try and download  
+    """
+
+    content_type = resp.headers.get("Content-Type", "").lower()
+    content_disposition = resp.headers.get("Content-Disposition", "").lower()
+
+    if not content_type.startswith("text/html"):
+        return False
+    
+    if "attachment" in content_disposition:
+        return False
+    
+    return True
