@@ -66,7 +66,10 @@ def scraper(url, resp):
     current_page_hash = simhash.compute_simhash(page_tokens)
     for visited_page_hash in visited_content_simhashes:
         dist = simhash.calculate_hash_distance(current_page_hash, visited_page_hash)
-        if dist < simhash.THRESHOLD:
+        if dist == 0:
+            scrap_logger.warning(f"Skipping URL {url}: Exact Duplicate Content Match with Dist={dist}")
+            return []
+        elif dist < simhash.THRESHOLD:
             scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
             return []
     visited_content_simhashes.add(current_page_hash)
