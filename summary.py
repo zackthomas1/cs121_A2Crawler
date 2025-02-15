@@ -40,9 +40,7 @@ stop_words = {
 def restart_summary_stats(summary_save_path: str, restart: bool) -> None:
     if restart:
         with shelve.open(summary_save_path) as db:
-            db["token_frequencies"] = Counter()
-            db["page_lengths"] = {}
-            db.sync()
+            db.clear()
 
 def update_page_lengths(summary_save_path: str, url: str, tokens: list[str]) -> None:
     with shelve.open(summary_save_path) as db:
@@ -139,7 +137,9 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
     return dict(sorted(subdomains.items()))
 
 if __name__ == "__main__":
-    print(f" There are {unique_pages('frontier.shelve')} unique pages")
+    print(f"There are {unique_pages('frontier.shelve')} unique pages")
     print(f"The longest page is {get_longest_page('summary.shelve')}.")
     print(f"The most common words are:\n\t{get_common_words('summary.shelve',50)}.")
-    print(f"ICS Subdomains:\n\t{ics_subdomains('frontier.shelve')}")
+    print(f"ICS Subdomains:\n")
+    for key, value in ics_subdomains('frontier.shelve'):
+        print(f"\t{key} - {value}")
