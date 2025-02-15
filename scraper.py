@@ -16,9 +16,7 @@ scrap_logger = get_logger("SCRAPPER")
 # Time complexity of python set in operation is O(1). 
 # For 20,000 SimHashes, the estimated memory usage is: 20,000 × 8 bytes = 160,000 bytes = 160 KB
 visited_content_simhashes = set()
-# visited_content_checksums = set()
 
-#
 visited_sitemaps = set()
 
 def scraper(url, resp):
@@ -59,21 +57,15 @@ def scraper(url, resp):
     summary.update_token_frequency("summary.shelve",page_tokens)
     summary.update_page_lengths("summary.shelve", url, page_tokens)
 
-    # # Check for EXACT content duplicate (Checksum) 
-    # content_checksum = compute_hash_value(text)
-    # if content_checksum in visited_content_checksums:
-    #     scrap_logger.warning(f"Skipping URL {url}: Exact Content Match")
-    #     return []
-    # visited_content_checksums.add(content_checksum)
 
-    # Check for NEAR duplicate content (Simhash)
+    # Check for near and exact duplicate content (Simhash); Simhash also covers exact duplicate which has dist == 0
     current_page_hash = simhash.compute_simhash(page_tokens)
     for visited_page_hash in visited_content_simhashes:
         dist = simhash.calculate_hash_distance(current_page_hash, visited_page_hash)
-        if dist == 0:
+        if dist == 0:  # Exact-duplicate
             scrap_logger.warning(f"Skipping URL {url}: Exact Duplicate Content Match with Dist={dist}")
             return []
-        elif dist < simhash.THRESHOLD:
+        elif dist < simhash.THRESHOLD:  # Near-duplicate
             scrap_logger.warning(f"Skipping URL {url}: Near Duplicate Content Match with Dist={dist}")
             return []
     visited_content_simhashes.add(current_page_hash)
