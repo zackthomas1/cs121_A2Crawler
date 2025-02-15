@@ -7,7 +7,7 @@ def compute_hash_value(content: str) -> str:
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
 def tokenize(text: str) -> list[str]:
-    return re.findall(r'\b[a-zA-Z]{1,}\b', text.lower())
+    return re.findall(r'\b[a-zA-Z0-9]{2,}\b', text.lower())
 
 # # Uncomment to activate Simhash ver.2 (code essence based on Lecture slide 3.1 p.45-46)
 # def compute_simhash(text: str, hashbits: int = 128) -> int: 

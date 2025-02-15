@@ -287,6 +287,7 @@ class TestScraper(unittest.TestCase):
 
         self.assertTrue(scraper.is_valid("https://gitlab.ics.uci.edu/mars-research/kvstore/Jellyfish/-/tree/feature/mer_dna_mem"))
 
+        self.assertFalse(scraper.is_valid("http://computableplant.ics.uci.edu/papers/2006/plcb-02-12-12_Wold.pdf"))
         self.assertFalse(scraper.is_valid("https://connectedlearning.uci.edu/media"))
         self.assertFalse(scraper.is_valid("https://ics.uci.edu/people"))
 
