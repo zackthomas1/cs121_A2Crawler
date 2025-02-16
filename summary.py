@@ -102,6 +102,14 @@ def get_longest_page(summary_save_path: str) -> tuple[str, int]:
                 longest_page = (key, value)
         
         return longest_page
+    
+def list_longest_pages(summary_save_path: str, k: int) -> list[tuple]:
+    
+    with shelve.open(summary_save_path) as db:
+        page_lengths = db.get("page_lengths", {})
+
+        sorted_pages = sorted(page_lengths.items(), key=lambda item: item[1], reverse=True)
+        return sorted_pages[:k]
 
 def get_common_words(summary_save_path: str, k: int) -> dict[str, int]: 
     """
@@ -137,19 +145,24 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
     return dict(sorted(subdomains.items()))
 
 if __name__ == "__main__":
-    # Unique pages
-    print(f"There are {unique_pages('frontier.shelve')} unique pages")
+    # # Unique pages
+    # print(f"There are {unique_pages('frontier.shelve')} unique pages")
     
-    # Longest page
-    page, word_count = get_longest_page('summary.shelve')
-    print(f"The longest page is {page} with {word_count} words.")
+    # # Longest page
+    # page, word_count = get_longest_page('summary.shelve')
+    # print(f"The longest page is {page} with {word_count} words.")
     
-    # Most common words
-    print(f"The most common words are:")
-    for word, count in get_common_words('summary.shelve',50):
-        print(f"\t{word} - {count}")
-
-    # ICS subdomains
-    print(f"ICS Subdomains:")
-    for key, value in ics_subdomains('frontier.shelve').items():
+    # List longest pages
+    print("Longest Pages:")
+    for key, value in list_longest_pages('summary.shelve', 50):
         print(f"\t{key} - {value}")
+
+    # # Most common words
+    # print(f"The most common words are:")
+    # for word, count in get_common_words('summary.shelve',50):
+    #     print(f"\t{word} - {count}")
+
+    # # ICS subdomains
+    # print(f"ICS Subdomains:")
+    # for key, value in ics_subdomains('frontier.shelve').items():
+    #     print(f"\t{key} - {value}")
