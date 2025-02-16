@@ -137,9 +137,19 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
     return dict(sorted(subdomains.items()))
 
 if __name__ == "__main__":
+    # Unique pages
     print(f"There are {unique_pages('frontier.shelve')} unique pages")
-    print(f"The longest page is {get_longest_page('summary.shelve')}.")
-    print(f"The most common words are:\n\t{get_common_words('summary.shelve',50)}.")
-    print(f"ICS Subdomains:\n")
-    for key, value in ics_subdomains('frontier.shelve'):
+    
+    # Longest page
+    page, word_count = get_longest_page('summary.shelve')
+    print(f"The longest page is {page} with {word_count} words.")
+    
+    # Most common words
+    print(f"The most common words are:")
+    for word, count in get_common_words('summary.shelve',50):
+        print(f"\t{word} - {count}")
+
+    # ICS subdomains
+    print(f"ICS Subdomains:")
+    for key, value in ics_subdomains('frontier.shelve').items():
         print(f"\t{key} - {value}")
