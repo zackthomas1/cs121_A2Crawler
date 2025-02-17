@@ -298,8 +298,6 @@ class TestScraper(unittest.TestCase):
         self.assertFalse(scraper.is_valid("https://www.cs.usc.edu/about/news/"))
         self.assertFalse(scraper.is_valid("https://eecs.berkeley.edu/about/"))
         self.assertFalse(scraper.is_valid("https://connectedlearning.uci.edu/media"))
-        self.assertFalse(scraper.is_valid("http://computableplant.ics.uci.edu/papers/2006/plcb-02-12-12_Wold.pdf"))
-        self.assertFalse(scraper.is_valid("https://ics.uci.edu/people"))
 
     def test_avoid_large_files(self): 
         self.assertTrue(False)
@@ -336,13 +334,16 @@ class TestScraper(unittest.TestCase):
         url_statsconsult2 = "https://statconsulting.uci.edu/wp-admin/"
 
         self.assertTrue(robots.can_fetch(url_people1))
+        self.assertTrue(robots.can_fetch(url_allowed))
+
         self.assertFalse(robots.can_fetch(url_people2))
         self.assertFalse(robots.can_fetch(url_happening1))
-        self.assertTrue(robots.can_fetch(url_allowed))
         self.assertFalse(robots.can_fetch(url_allowed, user_agent= "ClaudeBot"))
 
         self.assertTrue(robots.can_fetch(url_statsconsult1))
         # self.assertFalse(robots.can_fetch(url_statsconsult2))
+
+        self.assertFalse(scraper.is_valid("https://ics.uci.edu/people"))
 
     def test_scraper_duplicate_url(self):
         html_content = '''
@@ -669,12 +670,13 @@ class TestScraper(unittest.TestCase):
 
         self.assertFalse(scraper.is_valid(url_commit))
 
-    def test_avoid_readme_md_trap_detection(self): 
-        url_readme_1 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/f179207851371a407b7a7bea832d6ee07baddd26/readme.md"
-        url_readme_2 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/readme.md"
-
-        self.assertFalse(scraper.is_valid(url_readme_1))
-        self.assertFalse(scraper.is_valid(url_readme_2))
+    def test_avoid_non_html_file_extensions(self): 
+        self.assertFalse(scraper.is_valid("https://www.ics.uci.edu/~eppstein/bibs/meshgen.bib"))
+        self.assertFalse(scraper.is_valid("http://www.ics.uci.edu/~eppstein/pubs/p-ttree.bib.Z"))
+        self.assertFalse(scraper.is_valid("http://www.ics.uci.edu/~eppstein/pubs/p-ttree.tex.Z"))
+        self.assertFalse(scraper.is_valid("http://www.cecs.uci.edu/~specc/ftp/reference/scrc-2.0-1.src.i386-RHEL-WSv3.rpm"))
+        self.assertFalse(scraper.is_valid("https://www.ics.uci.edu/~eppstein/junkyard/ukraine/ukraine.ma"))
+        self.assertFalse(scraper.is_valid("http://computableplant.ics.uci.edu/papers/2006/plcb-02-12-12_Wold.pdf"))
 
     def test_id_trap_detection(self): 
         trap_url_1 = "https://www.ics.uci.edu/path/dffe26132d98b7a7dc702b0ec5a4a76000d48373"
