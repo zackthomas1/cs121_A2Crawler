@@ -258,7 +258,7 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
             logger.info(f"Processing site within sitemap: {url}")
 
             # If it's another sitemap that's valid, process
-            if is_xml_doc(url) and is_valid(url):
+            if is_xml_doc(url):
                 # Download the sitemap
                 time.sleep(config.time_delay)
                 logger.info(f"Downloading sitemap: {url}")
@@ -274,7 +274,8 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
                     url_element_stack.extend([elem.text.strip() for elem in ET.fromstring(new_resp.raw_response.content).findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")])
             # If just a site, add
             else:
-                urls.add(url)
+                if is_valid(url):
+                    urls.add(url)
 
         logger.info(f"Extracted {len(urls)} URLs from {sitemap_url}")
         return list(urls)
