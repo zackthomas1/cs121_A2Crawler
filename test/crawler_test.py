@@ -299,7 +299,16 @@ class TestScraper(unittest.TestCase):
         self.assertFalse(scraper.is_valid("https://eecs.berkeley.edu/about/"))
         self.assertFalse(scraper.is_valid("https://connectedlearning.uci.edu/media"))
 
-    def test_avoid_large_files(self): 
+    def test_avoid_pdf(self): 
+        """
+        Test case urls
+        http://www.physics.uci.edu/Tajima-Symposium-Presentations/Binderbauer
+        https://ics.uci.edu/~shantas/publications/20-secret-sharing-aggregation-TKDE-shantanu
+        http://www.informatics.uci.edu/files/pdf/InformaticsBrochure-March2018
+        https://ics.uci.edu/~eppstein/pubs/Epp-GD-23-slides
+        https://www.informatics.uci.edu/files/pdf/InformaticsBrochure-March2018
+        """
+        
         self.assertTrue(False)
 
     def test_invalid_scheme(self):
