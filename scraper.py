@@ -49,9 +49,9 @@ def scraper(url, resp):
         scrap_logger.warning(f"Skipping {url}: zip file")
         return []
 
-    if is_large_resp(url, resp, RESP_SIZE_THRESHOLD):
-        scrap_logger.warning(f"Skipping {url}: Content length greater than {RESP_SIZE_THRESHOLD} bytes")
-        return []
+    # if is_large_resp(url, resp, RESP_SIZE_THRESHOLD):
+    #     scrap_logger.warning(f"Skipping {url}: Content length greater than {RESP_SIZE_THRESHOLD} bytes")
+    #     return []
 
     if is_attachment_resp(url, resp):
         scrap_logger.warning(f"Skipping {url}: downloads attachment")
@@ -272,7 +272,7 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
             logger.info(f"Processing site within sitemap: {url}")
 
             # If it's another sitemap that's valid, process
-            if is_xml_doc(url):
+            if is_xml_doc(url) and is_valid(url):
                 # Download the sitemap
                 time.sleep(config.time_delay)
                 logger.info(f"Downloading sitemap: {url}")
@@ -315,7 +315,7 @@ def is_pdf_resp(url, resp):
     """
     """
     
-    content_type = resp.headers.get("Content-Type", "").lower()
+    content_type = resp.raw_response.headers.get("Content-Type", "").lower()
     
     # Check Content-Type header
     if "application/pdf" is content_type: 
@@ -335,7 +335,7 @@ def is_zip_resp(url, resp):
     and does not contain an attachment that will try and download  
     """
 
-    content_type = resp.headers.get("Content-Type", "").lower()
+    content_type = resp.raw_response.headers.get("Content-Type", "").lower()
 
     if "application/zip" is content_type: 
         return True
@@ -348,15 +348,15 @@ def is_html_resp(url, resp):
     and does not contain an attachment that will try and download  
     """
 
-    content_type = resp.headers.get("Content-Type", "").lower()
+    content_type = resp.raw_response.headers.get("Content-Type", "").lower()
 
-    if not content_type.startswith("text/html"):
-        return False
+    if content_type.startswith("text/html"):
+        return True
     
-    return True
+    return False
 
 def is_attachment_resp(url, resp): 
-    content_disposition = resp.headers.get("Content-Disposition", "").lower()
+    content_disposition = resp.raw_response.headers.get("Content-Disposition", "").lower()
 
     if "attachment" in content_disposition:
         return True
@@ -364,7 +364,7 @@ def is_attachment_resp(url, resp):
     return False
 
 def is_large_resp(url, resp, threshold): 
-    content_length = resp.headers.get("Content-Length", "")
+    content_length = resp.raw_response.headers.get("Content-Length", "")
 
     try:
         content_length = int(content_length)
