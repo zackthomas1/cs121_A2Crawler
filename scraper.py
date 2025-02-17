@@ -126,7 +126,6 @@ def extract_next_links(url, resp):
 
     return links
 
-
 def is_valid(url: str) -> bool:
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
@@ -141,8 +140,15 @@ def is_valid(url: str) -> bool:
         if parsed_url.scheme not in set(["http", "https"]):
             return False
         
+        def is_allowed_domain(domain: str) -> bool:
+            for d in allowed_domains: 
+                if domain == d or domain.endswith("." + d):
+                    return True
+            return False
+        
         # check host is in URL is in allowed domains
-        if parsed_url.netloc and not any(domain in parsed_url.netloc for domain in allowed_domains): 
+        domain = parsed_url.netloc
+        if domain and not is_allowed_domain(domain):
             return False
         
         # Avoid query strings (potential duplicate content)
