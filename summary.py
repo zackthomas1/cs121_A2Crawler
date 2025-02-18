@@ -23,12 +23,12 @@ but no more than 100k.
 
 stop_words = {
     "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at",
-    "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could",
+    "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can", "can't", "cannot", "could",
     "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for",
-    "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's",
+    "from", "further", "get", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's",
     "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm",
-    "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't",
-    "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours",
+    "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "may", "me", "more", "most", "mustn't",
+    "my", "myself", "next", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours",
     "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so",
     "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's",
     "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under",
@@ -136,11 +136,14 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
                 parsed_url = urlparse(url)
                 base_url = normalize(parsed_url._replace(query="", fragment="").geturl())
                 if "ics.uci.edu" in parsed_url.netloc:
+                    scheme = parsed_url.scheme
                     subdomain = parsed_url.netloc
+                    url_key = subdomain
+                    # url_key = scheme + "://" + subdomain
                     if subdomain in subdomains:
-                        subdomains[subdomain] += 1
+                        subdomains[url_key] += 1
                     else:
-                        subdomains[subdomain] = 1
+                        subdomains[url_key] = 1
 
     return dict(sorted(subdomains.items()))
 
@@ -158,7 +161,7 @@ if __name__ == "__main__":
         print(f"\t{key} - {value}")
 
     # Most common words
-    print(f"The most common words are:")
+    print(f"The 50 most common words are:")
     for word, count in get_common_words('summary.shelve',50):
         print(f"\t{word} - {count}")
 
