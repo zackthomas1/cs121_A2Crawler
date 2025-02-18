@@ -59,8 +59,7 @@ def update_token_frequency(summary_save_path: str, tokens: list[str]) -> None:
         token_frequencies = db.get("token_frequencies", Counter())
         
         # update
-        filtered_words = [token for token in tokens if token not in stop_words]
-        token_frequencies.update(filtered_words)
+        token_frequencies.update(tokens)
 
         # store back
         db["token_frequencies"] = token_frequencies
@@ -113,12 +112,20 @@ def list_longest_pages(summary_save_path: str, k: int) -> list[tuple]:
 
 def get_common_words(summary_save_path: str, k: int) -> dict[str, int]: 
     """
-    Gets 50 most common words across all the crawled pages
+    Gets k most common words across all the crawled pages
     """
     # Load existing save file, or create one if it does not exist.
     with shelve.open(summary_save_path) as db:
         token_frequencies = db.get("token_frequencies", Counter())
-        return token_frequencies.most_common(k)
+        
+        filtered_words = []
+        for word, count in token_frequencies.most_common():  # Iterate over all sorted words
+            if word not in stop_words:
+                filtered_words.append((word, count))
+            if len(filtered_words) >= k:  # Stop once we have 50 valid words
+                break
+        
+        return filtered_words
 
 def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
     """
