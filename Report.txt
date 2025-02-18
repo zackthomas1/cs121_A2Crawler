@@ -3,73 +3,126 @@ but discarding the fragment part. So, for example, http://www.ics.uci.edu#aaa an
 Even if you implement additional methods for textual similarity detection, please keep considering the above definition of 
 unique pages for the purposes of counting the unique pages in this assignment.
 
-There are 38837 unique pages
+There are 28621 unique pages
 
 2. What is the longest page in terms of the number of words? (HTML markup doesn’t count as words)
 
-The longest page is http://www.physics.uci.edu/Tajima-Symposium-Presentations/Binderbauer with 417485 words.
+The longest page is http://www.ics.uci.edu/~kay/wordlist.txt with 385093 words.
+
+Top 50 longest pages:
+        http://www.ics.uci.edu/~kay/wordlist.txt - 385093
+        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/prioriterates.txt - 79835
+        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/posterioriterates.txt - 79762
+        http://www.ics.uci.edu/~jacobson/cs122b/Project/04-FabFlixsTestData.txt - 48210
+        https://www.stat.uci.edu/covid19/index.html - 29058
+        https://www.stat.uci.edu/covid19/norcal-counties.html - 26895
+        https://www.stat.uci.edu/covid19/la-norcal.html - 26884
+        https://www.stat.uci.edu/covid19/oc-norcal.html - 26815
+        https://www.stat.uci.edu/covid19/socal-counties.html - 26799
+        http://www.ics.uci.edu/~eppstein/junkyard/all.html - 22666
+        https://sli.ics.uci.edu/AIStats/Postings - 22170
+        http://www.ics.uci.edu/~eppstein/pubs/geom-all.html - 21786
+        http://www.ics.uci.edu/~dsm/dyn/release/files/zImage_paapi - 21499
+        https://cml.ics.uci.edu/category/aiml - 20169
+        http://www.ics.uci.edu/~eppstein/bibs/eppstein.html - 19786
+        http://www.ics.uci.edu/~eppstein/pubs/graph-all.html - 18887
+        http://graphics.ics.uci.edu/publication.html - 18465
+        http://www.ics.uci.edu/~kay/courses/i42/wildride/data/1000customers.txt - 17798
+        https://cml.ics.uci.edu/category/aiml/page/3 - 17389
+        https://cml.ics.uci.edu/category/aiml/page/2 - 16699
+        http://www.ics.uci.edu/~ihler/papers/abs.html - 16270
+        https://www.stat.uci.edu/covid19/coastal-oc.html - 15401
+        https://www.stat.uci.edu/covid19/cencal-counties.html - 15229
+        http://www.ics.uci.edu/%7Ewscacchi/Papers/Vintage/Software_Productivity.html - 14930
+        https://www.stat.uci.edu/covid19/northern-oc.html - 14786
+        https://www.stat.uci.edu/covid19/southern-oc.html - 14699
+        https://icde2023.ics.uci.edu/detailed-program - 14335
+        https://www.stat.uci.edu/covid19/about.html - 14216
+        https://duttgroup.ics.uci.edu/publications - 13996
+        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/cowabortiondata.txt - 13188
+        http://www.ics.uci.edu/~jutts/hyman.html - 13060
+        https://www.stat.uci.edu/covid19/license.html - 12319
+        http://www.ics.uci.edu/~eppstein/pubs/a-solo.html - 12109
+        https://www.informatics.uci.edu/explore/books-we-have-written - 11966
+        https://chenli.ics.uci.edu/past-news - 11132
+        https://www.ics.uci.edu/~fielding/pubs/dissertation/evaluation.htm - 10845
+        https://duttgroup.ics.uci.edu/projects/self-aware-adaptive-computing/ipf - 10646
+        https://duttgroup.ics.uci.edu/projects/self-aware-adaptive-computing/mars - 10548
+        http://sli.ics.uci.edu/PmWiki/ReleaseNotes - 10473
+        http://www.ics.uci.edu/%7Ewscacchi/Papers/VISTA/VISTA.html - 10454
+        http://www.ics.uci.edu/~dechter/talks/cambridge-pub.pps - 10396
+        http://www.ics.uci.edu/~jacobson/ics10A/LabManual/08-Assignment5.html - 9662
+        https://grape.ics.uci.edu/wiki/public/attachment/wiki/cs122b-2017-winter-project5/query_load.txt - 9456
+        https://grape.ics.uci.edu/wiki/public/attachment/wiki/cs122b-2018-spring-project5/query_load.txt - 9456
+        https://grape.ics.uci.edu/wiki/public/attachment/wiki/cs122b-2018-winter-project5/query_load.txt - 9456
+        https://icde2023.ics.uci.edu/papers-research-track - 8674
+        http://www.ics.uci.edu/~eppstein/pubs/Epp-IJCAI-85.lsp - 8413
+        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/logoddstrauma.txt - 8104
+        https://cml.ics.uci.edu/category/aiml/page/4 - 8039
+        http://www.ics.uci.edu/~dechter/publications.html - 7941
 
 3. What are the 50 most common words in the entire set of pages crawled under these domains? 
 (Ignore English stop words, which can be found, for example, hereLinks to an external site.) 
 Submit the list of common words ordered by frequency.
 
-The most common words are:
-        const - 100996
-        research - 99277
-        ics - 68605
-        student - 59527
-        science - 51763
-        class - 50987
-        computer - 46987
-        us - 45793
-        events - 45549
-        uci - 45242
-        graduate - 45238
-        learning - 43267
-        undergraduate - 42800
-        2021 - 41423
-        data - 40489
-        operator - 39421
-        int - 39294
-        risc - 39049
-        students - 37187
-        definition - 36612
-        news - 35864
-        informatics - 35066
-        2022 - 33087
-        2024 - 33048
-        faculty - 32964
-        file - 32448
-        software - 32210
-        markellekelly - 30436
-        systems - 28435
-        follow - 28309
-        community - 27756
-        inline - 27173
-        10 - 26870
-        information - 26276
-        2020 - 26185
-        october - 25274
-        void - 24845
-        view - 24505
-        bool - 24213
-        alumni - 24013
-        computing - 23891
-        will - 23581
-        2023 - 22648
-        machine - 22506
-        2018 - 22473
-        can - 21738
-        future - 21396
-        projects - 21280
-        spotlights - 21257
-        may - 21236
+The 50 most common words are:
+        research - 90715
+        ics - 68368
+        student - 54461
+        science - 49014
+        computer - 44676
+        learning - 41813
+        graduate - 41552
+        undergraduate - 40346
+        us - 40307
+        uci - 36904
+        data - 36550
+        2021 - 36408
+        events - 35106
+        informatics - 35047
+        news - 32568
+        students - 31262
+        software - 30242
+        2022 - 29945
+        2024 - 29452
+        faculty - 27234
+        markellekelly - 26855
+        community - 26220
+        information - 24310
+        2020 - 23708
+        alumni - 23617
+        october - 23601
+        view - 23266
+        10 - 22461
+        machine - 21812
+        spotlights - 21283
+        computing - 21272
+        future - 20966
+        2023 - 20924
+        programs - 19591
+        statistics - 19587
+        will - 19407
+        2018 - 19111
+        systems - 19087
+        projects - 18847
+        text - 18750
+        can - 18281
+        may - 18049
+        school - 17988
+        next - 17301
+        2019 - 17133
+        follow - 17075
+        11 - 16999
+        contrast - 16409
+        get - 16091
+        engineering - 16081
 
 4. How many subdomains did you find in the ics.uci.edu domain? Submit the list of subdomains ordered alphabetically and the 
 number of unique pages detected in each subdomain. The content of this list should be lines containing URL, number, for example:
 http://vision.ics.uci.edu, 10 (not the actual number here)
 
-codeexchange.ics.uci.edu - 1
+ICS subdomains:
+        codeexchange.ics.uci.edu - 1
         DataGuard.ics.uci.edu - 1
         DataProtector.ics.uci.edu - 1
         accessibility.ics.uci.edu - 6
@@ -87,16 +140,14 @@ codeexchange.ics.uci.edu - 1
         chenli.ics.uci.edu - 10
         cherry.ics.uci.edu - 1
         chime.ics.uci.edu - 1
-        cloudberry.ics.uci.edu - 44
+        cloudberry.ics.uci.edu - 45
         cml.ics.uci.edu - 167
-        cocoa-krispies.ics.uci.edu - 1
         code.ics.uci.edu - 14
         codeexchange.ics.uci.edu - 1
         computableplant.ics.uci.edu - 102
         containers.ics.uci.edu - 1
         coronavirustwittermap.ics.uci.edu - 1
         courselisting.ics.uci.edu - 3
-        cps.ics.uci.edu - 1
         cradl.ics.uci.edu - 11
         create.ics.uci.edu - 7
         cs.ics.uci.edu - 14
@@ -110,9 +161,8 @@ codeexchange.ics.uci.edu - 1
         dgillen.ics.uci.edu - 31
         ds4all.ics.uci.edu - 3
         duke.ics.uci.edu - 1
-        duttgroup.ics.uci.edu - 113
-        dynamo.ics.uci.edu - 35
-        economics.uci.edu - 5
+        duttgroup.ics.uci.edu - 115
+        dynamo.ics.uci.edu - 1
         edgelab.ics.uci.edu - 7
         eli.ics.uci.edu - 4
         emj-pc.ics.uci.edu - 1
@@ -125,11 +175,11 @@ codeexchange.ics.uci.edu - 1
         frost.ics.uci.edu - 3
         futurehealth.ics.uci.edu - 149
         gbolcer.ics.uci.edu - 1
-        gitlab.ics.uci.edu - 987
+        gitlab.ics.uci.edu - 986
         grafana-infra-blue.ics.uci.edu - 1
-        grape.ics.uci.edu - 267
-        graphics.ics.uci.edu - 13
-        graphmod.ics.uci.edu - 2
+        grape.ics.uci.edu - 263
+        graphics.ics.uci.edu - 17
+        graphmod.ics.uci.edu - 16
         hack.ics.uci.edu - 2
         hai.ics.uci.edu - 6
         hana.ics.uci.edu - 3
@@ -142,7 +192,7 @@ codeexchange.ics.uci.edu - 1
         i-sensorium.ics.uci.edu - 6
         iasl.ics.uci.edu - 22
         icde2023.ics.uci.edu - 43
-        ics.uci.edu - 3891
+        ics.uci.edu - 4008
         ics45c-hub.ics.uci.edu - 2
         ics45c-staging-hub.ics.uci.edu - 2
         ics46-hub.ics.uci.edu - 2
@@ -156,13 +206,11 @@ codeexchange.ics.uci.edu - 1
         informatics.uci.edu - 2
         insite.ics.uci.edu - 8
         ipubmed.ics.uci.edu - 1
-        isg.ics.uci.edu - 313
-        jdsylab.physics.uci.edu - 25
+        isg.ics.uci.edu - 295
         jgarcia.ics.uci.edu - 1
         jujube.ics.uci.edu - 2
         julia-hub.ics.uci.edu - 2
         kpassword.ics.uci.edu - 1
-        linguistics.uci.edu - 43
         lolth.ics.uci.edu - 1
         luci.ics.uci.edu - 6
         mailman.ics.uci.edu - 38
@@ -182,16 +230,13 @@ codeexchange.ics.uci.edu - 1
         mswe.ics.uci.edu - 11
         mt-live.ics.uci.edu - 1
         nalini.ics.uci.edu - 7
-        ngs.ics.uci.edu - 1729
+        ngs.ics.uci.edu - 1646
         oai.ics.uci.edu - 6
         observium.ics.uci.edu - 1
         omni.ics.uci.edu - 1
         onboarding.ics.uci.edu - 3
         password.ics.uci.edu - 1
-        pasteur.ics.uci.edu - 2
         pgadmin.ics.uci.edu - 1
-        physics.uci.edu - 411
-        plrg.ics.uci.edu - 84
         prometheus-infra-blue.ics.uci.edu - 1
         psearch.ics.uci.edu - 5
         radicle.ics.uci.edu - 6
@@ -214,14 +259,13 @@ codeexchange.ics.uci.edu - 1
         stairs.ics.uci.edu - 4
         statconsulting.ics.uci.edu - 5
         statistics-stage.ics.uci.edu - 11
-        student-council.ics.uci.edu - 14
-        studentcouncil.ics.uci.edu - 9
-        students.ics.uci.edu - 2
+        student-council.ics.uci.edu - 3
+        studentcouncil.ics.uci.edu - 17
+        students.ics.uci.edu - 1
         summeracademy.ics.uci.edu - 1
-        swiki.ics.uci.edu - 75
+        swiki.ics.uci.edu - 28
         tad.ics.uci.edu - 3
         tastier.ics.uci.edu - 1
-        theory.physics.uci.edu - 1
         tippers.ics.uci.edu - 1
         tippersweb.ics.uci.edu - 2
         transformativeplay.ics.uci.edu - 57
@@ -232,22 +276,15 @@ codeexchange.ics.uci.edu - 1
         vision.ics.uci.edu - 216
         wearablegames.ics.uci.edu - 2
         wics.ics.uci.edu - 761
-        wiki.ics.uci.edu - 34
+        wiki.ics.uci.edu - 79
         www-db.ics.uci.edu - 37
-        www-db.ics.uci.edu:8000 - 1
-        www-db.ics.uci.edu:8003 - 1
-        www-db.ics.uci.edu:8004 - 1
-        www-db.ics.uci.edu:8006 - 1
-        www.cert.ics.uci.edu - 1
+        www.cert.ics.uci.edu - 14
         www.checkmate.ics.uci.edu - 2
-        www.economics.uci.edu - 85
-        www.graphics.ics.uci.edu - 8
-        www.ics.uci.edu - 16553
+        www.graphics.ics.uci.edu - 3
+        www.ics.uci.edu - 16389
         www.informatics.ics.uci.edu - 1
         www.informatics.uci.edu - 1166
         www.isg.ics.uci.edu - 1
         www.mds.ics.uci.edu - 1
-        www.physics.uci.edu - 444
-        www.statistics.uci.edu - 1
         xtune.ics.uci.edu - 6
         yarra.ics.uci.edu - 1
