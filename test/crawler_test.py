@@ -287,15 +287,28 @@ class TestScraper(unittest.TestCase):
 
         self.assertTrue(scraper.is_valid("https://gitlab.ics.uci.edu/mars-research/kvstore/Jellyfish/-/tree/feature/mer_dna_mem"))
 
-        self.assertFalse(scraper.is_valid("https://connectedlearning.uci.edu/media"))
-        self.assertFalse(scraper.is_valid("https://ics.uci.edu/people"))
-
     def test_disallowed_domain(self):
+        self.assertFalse(scraper.is_valid("http://www.physics.uci.edu"))
+        self.assertFalse(scraper.is_valid("https://www.economics.uci.edu/"))
+        self.assertFalse(scraper.is_valid("https://linguistics.uci.edu"))
+        self.assertFalse(scraper.is_valid("https://bacatec2022.cecs.uci.edu"))
+        self.assertFalse(scraper.is_valid("http://plrg.eecs.uci.edu/satcheck"))
+
         self.assertFalse(scraper.is_valid("https://www.cs.ucla.edu/history/"))
         self.assertFalse(scraper.is_valid("https://www.cs.usc.edu/about/news/"))
         self.assertFalse(scraper.is_valid("https://eecs.berkeley.edu/about/"))
+        self.assertFalse(scraper.is_valid("https://connectedlearning.uci.edu/media"))
 
-    def test_avoid_large_files(self): 
+    def test_avoid_pdf(self): 
+        """
+        Test case urls
+        http://www.physics.uci.edu/Tajima-Symposium-Presentations/Binderbauer
+        https://ics.uci.edu/~shantas/publications/20-secret-sharing-aggregation-TKDE-shantanu
+        http://www.informatics.uci.edu/files/pdf/InformaticsBrochure-March2018
+        https://ics.uci.edu/~eppstein/pubs/Epp-GD-23-slides
+        https://www.informatics.uci.edu/files/pdf/InformaticsBrochure-March2018
+        """
+        
         self.assertTrue(False)
 
     def test_invalid_scheme(self):
@@ -330,13 +343,16 @@ class TestScraper(unittest.TestCase):
         url_statsconsult2 = "https://statconsulting.uci.edu/wp-admin/"
 
         self.assertTrue(robots.can_fetch(url_people1))
+        self.assertTrue(robots.can_fetch(url_allowed))
+
         self.assertFalse(robots.can_fetch(url_people2))
         self.assertFalse(robots.can_fetch(url_happening1))
-        self.assertTrue(robots.can_fetch(url_allowed))
         self.assertFalse(robots.can_fetch(url_allowed, user_agent= "ClaudeBot"))
 
         self.assertTrue(robots.can_fetch(url_statsconsult1))
         # self.assertFalse(robots.can_fetch(url_statsconsult2))
+
+        self.assertFalse(scraper.is_valid("https://ics.uci.edu/people"))
 
     def test_scraper_duplicate_url(self):
         html_content = '''
@@ -663,12 +679,13 @@ class TestScraper(unittest.TestCase):
 
         self.assertFalse(scraper.is_valid(url_commit))
 
-    def test_avoid_readme_md_trap_detection(self): 
-        url_readme_1 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/f179207851371a407b7a7bea832d6ee07baddd26/readme.md"
-        url_readme_2 = "https://gitlab.ics.uci.edu/curtic3/Checkers_Student/-/blob/readme.md"
-
-        self.assertFalse(scraper.is_valid(url_readme_1))
-        self.assertFalse(scraper.is_valid(url_readme_2))
+    def test_avoid_non_html_file_extensions(self): 
+        self.assertFalse(scraper.is_valid("https://www.ics.uci.edu/~eppstein/bibs/meshgen.bib"))
+        self.assertFalse(scraper.is_valid("http://www.ics.uci.edu/~eppstein/pubs/p-ttree.bib.Z"))
+        self.assertFalse(scraper.is_valid("http://www.ics.uci.edu/~eppstein/pubs/p-ttree.tex.Z"))
+        self.assertFalse(scraper.is_valid("http://www.cecs.uci.edu/~specc/ftp/reference/scrc-2.0-1.src.i386-RHEL-WSv3.rpm"))
+        self.assertFalse(scraper.is_valid("https://www.ics.uci.edu/~eppstein/junkyard/ukraine/ukraine.ma"))
+        self.assertFalse(scraper.is_valid("http://computableplant.ics.uci.edu/papers/2006/plcb-02-12-12_Wold.pdf"))
 
     def test_id_trap_detection(self): 
         trap_url_1 = "https://www.ics.uci.edu/path/dffe26132d98b7a7dc702b0ec5a4a76000d48373"

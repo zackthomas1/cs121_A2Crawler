@@ -1,5 +1,8 @@
 import re
 import time
+import io
+import PyPDF2
+import PyPDF2.errors
 
 import summary
 from robots import *
@@ -19,6 +22,9 @@ visited_content_simhashes = set()
 
 visited_sitemaps = set()
 
+# response content size limit (bytes)
+RESP_SIZE_THRESHOLD = 500000 # (500 kb)
+
 def scraper(url, resp):
 
     # Check that the response status is ok and that the raw response has content
@@ -32,11 +38,24 @@ def scraper(url, resp):
             scrap_logger.warning(f"Skipping URL {url}: Invalid response or status {resp.status}")
             return []
 
-    # # Check that response is valid html document
-    # if not is_html_resp(url, resp):
+    # Check header fields for indication of common problematic responses 
+    if is_pdf_resp(url, resp):
+        scrap_logger.warning(f"Skipping {url}: pdf file")
+        return []
+    
+    if is_zip_resp(url, resp):
+        scrap_logger.warning(f"Skipping {url}: zip file")
+        return []
+
+    # if is_large_resp(url, resp, RESP_SIZE_THRESHOLD):
+    #     scrap_logger.warning(f"Skipping {url}: Content length greater than {RESP_SIZE_THRESHOLD} bytes")
     #     return []
 
-    # parse html document for text
+    if is_attachment_resp(url, resp):
+        scrap_logger.warning(f"Skipping {url}: downloads attachment")
+        return []
+    
+    # parse as html document
     try:
         # Get the text from the html response
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
@@ -118,7 +137,6 @@ def extract_next_links(url, resp):
 
     return links
 
-
 def is_valid(url: str) -> bool:
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
@@ -133,8 +151,15 @@ def is_valid(url: str) -> bool:
         if parsed_url.scheme not in set(["http", "https"]):
             return False
         
+        def is_allowed_domain(domain: str) -> bool:
+            for d in allowed_domains: 
+                if domain == d or domain.endswith("." + d):
+                    return True
+            return False
+        
         # check host is in URL is in allowed domains
-        if parsed_url.netloc and not any(domain in parsed_url.netloc for domain in allowed_domains): 
+        domain = parsed_url.netloc
+        if domain and not is_allowed_domain(domain):
             return False
         
         # Avoid query strings (potential duplicate content)
@@ -169,13 +194,10 @@ def is_valid(url: str) -> bool:
             return False
 
         # Check robot.txt rules to follow politeness 
-        # and do not fetch from paths we are not allowed
+        # Do not fetch from paths we are not allowed
         if not can_fetch(url):
             return False
        
-        #TODO: add a filter for urls to pdf files that do not contain .pdf file extension in path
-        # example: https://www.informatics.uci.edu/files/pdf/InformaticsBrochure-March2018
-
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -185,12 +207,11 @@ def is_valid(url: str) -> bool:
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
-            + r"|img|java|war|sql|mpg|ff|sh|ppsx|py|apk|svg|conf|cpp|fig|cls|ipynb|bam|odp|odc)$", parsed_url.path.lower())
+            + r"|img|java|war|sql|mpg|ff|sh|ppsx|py|apk|svg|conf|cpp|fig|cls|ipynb|bam|odp|odc|tsv|nb|bib|z|rpm|ma)$", parsed_url.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed_url)
         return False
-
 
 # Sitemap Helper Methods
 def get_sitemap_urls(url: str) -> list[str]: 
@@ -213,7 +234,6 @@ def get_sitemap_urls(url: str) -> list[str]:
         return sitemaps_urls
     else:
         return []
-
 
 def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list[str]: 
 
@@ -260,7 +280,8 @@ def fetch_sitemap_urls(sitemap_url: str, config: Config, logger: Logger) -> list
                     url_element_stack.extend([elem.text.strip() for elem in ET.fromstring(new_resp.raw_response.content).findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")])
             # If just a site, add
             else:
-                urls.add(url)
+                if is_valid(url):
+                    urls.add(url)
 
         logger.info(f"Extracted {len(urls)} URLs from {sitemap_url}")
         return list(urls)
@@ -282,19 +303,66 @@ def seed_frontier_from_sitemap(url: str, config: Config, logger: Logger) -> list
 
     return links
 
+def is_pdf_resp(url, resp):
+    """
+    """
+    
+    content_type = resp.raw_response.headers.get("Content-Type", "").lower()
+    
+    # Check Content-Type header
+    if "application/pdf" is content_type: 
+        return True
+    
+    # 
+    try:
+        with io.BytesIO(resp.raw_response.content) as pdf_stream: 
+            reader = PyPDF2.PdfReader(pdf_stream)
+            return bool(reader.pages)
+    except PyPDF2.errors.PdfReadError:
+        return False
+
+def is_zip_resp(url, resp):
+    """
+    Checks that the response contains text in html format 
+    and does not contain an attachment that will try and download  
+    """
+
+    content_type = resp.raw_response.headers.get("Content-Type", "").lower()
+
+    if "application/zip" is content_type: 
+        return True
+    
+    return False
+
 def is_html_resp(url, resp):
     """
     Checks that the response contains text in html format 
     and does not contain an attachment that will try and download  
     """
 
-    content_type = resp.headers.get("Content-Type", "").lower()
-    content_disposition = resp.headers.get("Content-Disposition", "").lower()
+    content_type = resp.raw_response.headers.get("Content-Type", "").lower()
 
-    if not content_type.startswith("text/html"):
-        return False
+    if content_type.startswith("text/html"):
+        return True
     
+    return False
+
+def is_attachment_resp(url, resp): 
+    content_disposition = resp.raw_response.headers.get("Content-Disposition", "").lower()
+
     if "attachment" in content_disposition:
+        return True
+
+    return False
+
+def is_large_resp(url, resp, threshold): 
+    content_length = resp.raw_response.headers.get("Content-Length", "")
+
+    try:
+        content_length = int(content_length)
+        if content_length > threshold: 
+            return True
+    except: 
         return False
     
-    return True
+    return False

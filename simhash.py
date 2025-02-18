@@ -9,7 +9,7 @@ def compute_hash_value(content: str) -> str:
 
 
 def tokenize(text: str) -> list[str]:
-    return re.findall(r'\b[a-zA-Z]{1,}\b', text.lower())
+    return re.findall(r'\b[a-zA-Z0-9]{2,}\b', text.lower())
 
 
 def compute_simhash(tokens: list[str], hashbits: int = 128) -> int: 
