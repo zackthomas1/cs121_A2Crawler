@@ -218,3 +218,22 @@ THINGS TO KEEP IN MIND
    both. Mechanisms can be used to avoid that, however the politeness limits
    still apply and will be checked.
 6. Do not attempt to download the links directly from ics servers.
+
+
+Virtual Environment (venv)
+-----------------------
+Creates lightweight python environment own independent set of Python packages installed in site directories
+
+Create virtual environment (bash)
+```python3 -m venv venv```
+
+Activate virtual environment (bash)
+```source .venv/bin/activate```
+
+Deactivate virtual environment (bash)
+```deactivate```
+
+Install Dependencies
+
+Verify the Environment
+```which python```

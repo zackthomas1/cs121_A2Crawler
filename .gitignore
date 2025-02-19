@@ -103,8 +103,17 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# vscode
-.vscode/
-
 *.full.py
 *.shelve
+
+#vscode
+.vscode/
+
+# git
+.git/
+
+#
+Logs/
+
+#
+test_crawler
