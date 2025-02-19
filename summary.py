@@ -141,13 +141,11 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
         for url, completed in db.values(): 
             if completed: 
                 parsed_url = urlparse(url)
-                base_url = normalize(parsed_url._replace(query="", fragment="").geturl())
-                if "ics.uci.edu" in parsed_url.netloc:
-                    scheme = parsed_url.scheme
-                    subdomain = parsed_url.netloc
-                    url_key = subdomain
-                    # url_key = scheme + "://" + subdomain
-                    if subdomain in subdomains:
+                # base_url = normalize(parsed_url._replace(query="", fragment="").geturl())
+                subdomain = parsed_url.netloc
+                url_key = subdomain.removeprefix("http:").lstrip("\w.")
+                if "ics.uci.edu" in url_key and url_key != "informatics.uci.edu":
+                    if url_key in subdomains:
                         subdomains[url_key] += 1
                     else:
                         subdomains[url_key] = 1
@@ -163,7 +161,7 @@ if __name__ == "__main__":
     print(f"The longest page is {page} with {word_count} words.")
     
     # List longest pages
-    print("Longest Pages:")
+    print("The Top 50 Longest Pages:")
     for key, value in list_longest_pages('summary.shelve', 50):
         print(f"\t{key} - {value}")
 
