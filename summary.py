@@ -143,7 +143,7 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
                 parsed_url = urlparse(url)
                 # base_url = normalize(parsed_url._replace(query="", fragment="").geturl())
                 subdomain = parsed_url.netloc
-                url_key = subdomain.removeprefix("http:").lstrip("\w.")
+                url_key = subdomain.removeprefix("http:").lstrip("\w. ")
                 if "ics.uci.edu" in url_key and url_key != "informatics.uci.edu":
                     if url_key in subdomains:
                         subdomains[url_key] += 1
@@ -154,23 +154,23 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
 
 if __name__ == "__main__":
     # Unique pages
-    print(f"There are {unique_pages('frontier.shelve')} unique pages")
+    print(f"There are {unique_pages('Logs/_log_deploy_run_3/frontier.shelve')} unique pages")
     
     # Longest page
-    page, word_count = get_longest_page('summary.shelve')
+    page, word_count = get_longest_page('Logs/_log_deploy_run_3/summary.shelve')
     print(f"The longest page is {page} with {word_count} words.")
     
     # List longest pages
     print("The Top 50 Longest Pages:")
-    for key, value in list_longest_pages('summary.shelve', 50):
+    for key, value in list_longest_pages('Logs/_log_deploy_run_3/summary.shelve', 50):
         print(f"\t{key} - {value}")
 
     # Most common words
     print(f"The 50 most common words are:")
-    for word, count in get_common_words('summary.shelve',50):
+    for word, count in get_common_words('Logs/_log_deploy_run_3/summary.shelve',50):
         print(f"\t{word} - {count}")
 
     # ICS subdomains
     print(f"ICS Subdomains:")
-    for key, value in ics_subdomains('frontier.shelve').items():
+    for key, value in ics_subdomains('Logs/_log_deploy_run_3/frontier.shelve').items():
         print(f"\t{key} - {value}")

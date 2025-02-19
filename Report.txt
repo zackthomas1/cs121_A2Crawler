@@ -9,58 +9,6 @@ There are 28560 unique pages
 
 The longest page is http://www.ics.uci.edu/~kay/wordlist.txt with 385093 words.
 
-Top 50 longest pages:
-        http://www.ics.uci.edu/~kay/wordlist.txt - 385093
-        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/prioriterates.txt - 79835
-        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/posterioriterates.txt - 79762
-        http://www.ics.uci.edu/~jacobson/cs122b/Project/04-FabFlixsTestData.txt - 48210
-        https://www.stat.uci.edu/covid19/index.html - 29058
-        https://www.stat.uci.edu/covid19 - 29058
-        https://www.stat.uci.edu/covid19/norcal-counties.html - 26895
-        https://www.stat.uci.edu/covid19/la-norcal.html - 26884
-        https://www.stat.uci.edu/covid19/oc-norcal.html - 26815
-        https://www.stat.uci.edu/covid19/socal-counties.html - 26799
-        http://www.ics.uci.edu/~eppstein/junkyard/all.html - 22666
-        https://sli.ics.uci.edu/AIStats/Postings - 22170
-        http://www.ics.uci.edu/~eppstein/pubs/geom-all.html - 21786
-        http://dynamo.ics.uci.edu/files/zImage_paapi - 21499
-        http://www.ics.uci.edu/~dsm/dyn/release/files/zImage_paapi - 21499
-        https://cml.ics.uci.edu/category/aiml - 20169
-        http://www.ics.uci.edu/~eppstein/bibs/eppstein.html - 19786
-        http://www.ics.uci.edu/~eppstein/pubs/graph-all.html - 18887
-        https://graphics.ics.uci.edu/publication.html - 18465
-        http://www.ics.uci.edu/~kay/courses/i42/wildride/data/1000customers.txt - 17798
-        https://cml.ics.uci.edu/category/aiml/page/3 - 17389
-        https://cml.ics.uci.edu/category/aiml/page/2 - 16699
-        http://www.ics.uci.edu/~ihler/papers/abs.html - 16270
-        https://www.stat.uci.edu/covid19/coastal-oc.html - 15401
-        https://www.stat.uci.edu/covid19/cencal-counties.html - 15229
-        http://www.ics.uci.edu/%7Ewscacchi/Papers/Vintage/Software_Productivity.html - 14930
-        https://www.stat.uci.edu/covid19/northern-oc.html - 14786
-        https://www.stat.uci.edu/covid19/southern-oc.html - 14699
-        https://icde2023.ics.uci.edu/detailed-program - 14335
-        https://www.stat.uci.edu/covid19/about.html - 14216
-        https://duttgroup.ics.uci.edu/publications - 13996
-        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/cowabortiondata.txt - 13188
-        http://www.ics.uci.edu/~jutts/hyman.html - 13060
-        https://www.stat.uci.edu/covid19/license.html - 12319
-        http://www.ics.uci.edu/~eppstein/pubs/a-solo.html - 12109
-        https://www.informatics.uci.edu/explore/books-we-have-written - 11966
-        https://chenli.ics.uci.edu/past-news - 11132
-        https://www.ics.uci.edu/~fielding/pubs/dissertation/evaluation.htm - 10845
-        https://duttgroup.ics.uci.edu/projects/self-aware-adaptive-computing/ipf - 10646
-        https://duttgroup.ics.uci.edu/projects/self-aware-adaptive-computing/mars - 10548
-        http://sli.ics.uci.edu/PmWiki/ReleaseNotes - 10473
-        http://www.ics.uci.edu/%7Ewscacchi/Papers/VISTA/VISTA.html - 10454
-        http://www.ics.uci.edu/~jacobson/ics10A/LabManual/08-Assignment5.html - 9662
-        https://grape.ics.uci.edu/wiki/public/attachment/wiki/cs122b-2017-winter-project5/query_load.txt - 9456
-        https://grape.ics.uci.edu/wiki/public/attachment/wiki/cs122b-2019-winter-project5/query_load.txt - 9456
-        https://grape.ics.uci.edu/wiki/public/attachment/wiki/cs122b-2018-winter-project5/query_load.txt - 9456
-        https://icde2023.ics.uci.edu/papers-research-track - 8674
-        http://www.ics.uci.edu/~eppstein/pubs/Epp-IJCAI-85.lsp - 8413
-        http://www.ics.uci.edu/~wjohnson/BIDA/Ch8/logoddstrauma.txt - 8104
-        https://cml.ics.uci.edu/category/aiml/page/4 - 8039
-
 3. What are the 50 most common words in the entire set of pages crawled under these domains? 
 (Ignore English stop words, which can be found, for example, hereLinks to an external site.) 
 Submit the list of common words ordered by frequency.
@@ -122,10 +70,6 @@ number of unique pages detected in each subdomain. The content of this list shou
 http://vision.ics.uci.edu, 10 (not the actual number here)
 
 ICS subdomains:
-        codeexchange.ics.uci.edu - 1
-        -db.ics.uci.edu - 37
-        DataGuard.ics.uci.edu - 1
-        DataProtector.ics.uci.edu - 1
         accessibility.ics.uci.edu - 6
         acoi.ics.uci.edu - 108
         aiclub.ics.uci.edu - 2
@@ -144,7 +88,7 @@ ICS subdomains:
         cloudberry.ics.uci.edu - 47
         cml.ics.uci.edu - 167
         code.ics.uci.edu - 14
-        codeexchange.ics.uci.edu - 1
+        codeexchange.ics.uci.edu - 2
         computableplant.ics.uci.edu - 102
         containers.ics.uci.edu - 1
         coronavirustwittermap.ics.uci.edu - 1
@@ -156,6 +100,9 @@ ICS subdomains:
         cs260p-staging-hub.ics.uci.edu - 2
         cwicsocal18.ics.uci.edu - 12
         cyberclub.ics.uci.edu - 52
+        -db.ics.uci.edu - 37
+        DataGuard.ics.uci.edu - 1
+        DataProtector.ics.uci.edu - 1
         datalab.ics.uci.edu - 1
         dblp.ics.uci.edu - 2
         dejavu.ics.uci.edu - 1
