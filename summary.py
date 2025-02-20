@@ -120,7 +120,7 @@ def get_common_words(summary_save_path: str, k: int) -> dict[str, int]:
         
         filtered_words = []
         for word, count in token_frequencies.most_common():  # Iterate over all sorted words
-            if word not in stop_words:
+            if word not in stop_words and word.isalpha():
                 filtered_words.append((word, count))
             if len(filtered_words) >= k:  # Stop once we have 50 valid words
                 break
@@ -142,9 +142,11 @@ def ics_subdomains(frontier_save_path: str) -> dict[str, int]:
             if completed: 
                 parsed_url = urlparse(url)
                 # base_url = normalize(parsed_url._replace(query="", fragment="").geturl())
+                scheme = parsed_url.scheme
                 subdomain = parsed_url.netloc
-                url_key = subdomain.removeprefix("http:").lstrip("\w. ")
-                if "ics.uci.edu" in url_key and url_key != "informatics.uci.edu":
+                subdomain = subdomain.removeprefix("http:").lstrip("\w. ")
+                url_key = scheme + "://" + subdomain
+                if "ics.uci.edu" in subdomain and subdomain != "informatics.uci.edu":
                     if url_key in subdomains:
                         subdomains[url_key] += 1
                     else:
